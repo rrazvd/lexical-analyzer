@@ -1,3 +1,6 @@
 /input
 /output
-/__pycache__
+
+*.pyc
+
+__pycache__/
