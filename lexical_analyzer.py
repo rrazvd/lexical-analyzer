@@ -1,17 +1,7 @@
 from cursor import Cursor
 from symbol_table import SymbolTable
 from token import Token
-import re
-
-reserved_words = ['var', 'const', 'typedef', 'struct',
-                  'extends', 'procedure', 'function', 'start',
-                  'return', 'if', 'else', 'then', 'while', 'read',
-                  'print', 'int', 'real', 'boolean', 'string', 'true',
-                  'false', 'global', 'local']
-
-delimiters = [';', ',', '(', ')', '{', '}', '[', ']', '.']
-letter = re.compile(r'[a-zA-Z]')
-letter_or_digit_or_under = re.compile(r'[a-zA-Z0-9_]')
+from constants import reserved_words, delimiters, letter, digit, string_ascii, letter_digit_under
 
 
 class LexicalAnalyzer():
@@ -19,7 +9,7 @@ class LexicalAnalyzer():
         self.tokens = []
         self.errors = []
         self.code = code
-        self.isCommentOpen = False
+        self.is_comment_open = False
         self.cursor = Cursor()
         self.symbol_table = SymbolTable()
         self.symbol_table.add_words(reserved_words)
@@ -35,10 +25,10 @@ class LexicalAnalyzer():
                     lexeme += char
             else:
                 if (lexeme == '*/'):
-                    self.isCommentOpen = False
+                    self.is_comment_open = False
                     return
                 else:
-                    self.isCommentOpen = True
+                    self.is_comment_open = True
                     lexeme = ''
             self.cursor.forward()
 
@@ -47,7 +37,7 @@ class LexicalAnalyzer():
         start = self.cursor.get_position()
         while self.cursor.get_position() < len(line):
             char = line[self.cursor.get_position()]
-            if (letter_or_digit_or_under.match(char)):
+            if (letter_digit_under.match(char)):
                 lexeme += char
             else:
                 return self.symbol_table.get_token(
@@ -59,9 +49,7 @@ class LexicalAnalyzer():
         start = self.cursor.get_position()
         while self.cursor.get_position() < len(line):
             char = line[self.cursor.get_position()]
-            if (char == '/'):
-                lexeme += char
-            elif (char == '*'):
+            if (char == '/' or char == '*'):
                 lexeme += char
             else:
                 if (lexeme == '/'):
@@ -73,25 +61,58 @@ class LexicalAnalyzer():
                     self.find_end_block_comment(line)
             self.cursor.forward()
 
+    def analyze_string(self, line):
+        lexeme = ''
+        self.cursor.forward()
+        start = self.cursor.get_position()
+        while self.cursor.get_position() < len(line):
+            char = line[self.cursor.get_position()]
+            if (char == '\\'):  # if find \
+                look_ahead_char = line[(self.cursor.get_position() + 1)]
+                if (look_ahead_char == '\"'):  # check if \"
+                    lexeme += look_ahead_char
+                    self.cursor.forward()
+                elif (look_ahead_char == '\\'):  # check if \\
+                    lexeme += char
+                    self.cursor.forward()
+            elif (string_ascii.match(char)):
+                lexeme += char
+            elif (char == '\"'):
+                return Token('literal', "\"" + lexeme + "\"")
+            self.cursor.forward()
+
+    def add_token(self, token):
+        if(token != None):
+            self.tokens.append(token)
+
+    def get_tokens(self):
+        return self.tokens
+
+    def get_symbol_table(self):
+        return self.symbol_table.get_table()
+
     def start_analyze(self):
         line_count = 1
         """ iterate lines  """
         for line in self.code:
             """ checks if not have an open comment """
-            if (not self.isCommentOpen):
+            if (not self.is_comment_open):
                 while self.cursor.get_position() < len(line):
                     char = line[self.cursor.get_position()]
                     if (letter.match(char)):  # id or word
                         token = self.analyze_id_or_word(line, line_count)
-                        if (token != None):
-                            self.cursor.backward()
-                            self.tokens.append(token)
+                        self.add_token(token)
+                        self.cursor.backward()
                     elif (char == '/'):  # comments delimiters or / operator
                         token = self.analyze_comments_delimiters(line)
-                        if (token != None):
-                            self.tokens.append(token)
-                    elif (char in delimiters):  # delimiters
-                        self.tokens.append(Token(char, ''))
+                        self.add_token(token)
+                    elif (delimiters.match(char)):  # delimiters
+                        self.add_token(Token(char, ''))
+                    elif (digit.match(char)):
+                        self.add_token(Token('digit', char))
+                    elif (char == '\"'):  # strings
+                        token = self.analyze_string(line)
+                        self.add_token(token)
 
                     self.cursor.forward()
             else:
@@ -104,9 +125,3 @@ class LexicalAnalyzer():
             self.cursor.to_start()
 
         return self
-
-    def get_tokens(self):
-        return self.tokens
-
-    def get_symbol_table(self):
-        return self.symbol_table.get_table()
