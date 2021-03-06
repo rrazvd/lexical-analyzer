@@ -12,7 +12,7 @@ for _input in inputs:
     with open('./input/' + _input, 'r') as code:
 
         """ creates a LexicalAnalyzer sending code content and start analyze """
-        la = LexicalAnalyzer(code).start_analyze()
+        la = LexicalAnalyzer(code.readlines()).start_analyze()
 
         """ get tokens & symbol table and write them to the output file """
         tokens = la.get_tokens()

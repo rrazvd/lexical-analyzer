@@ -26,7 +26,7 @@ class LexicalAnalyzer():
             else:
                 if (lexeme == '*/'):
                     self.is_comment_open = False
-                    return
+                    return True
                 else:
                     self.is_comment_open = True
                     lexeme = ''
@@ -52,13 +52,13 @@ class LexicalAnalyzer():
             if (char == '/' or char == '*'):
                 lexeme += char
             else:
-                if (lexeme == '/'):
-                    return Token(lexeme, '')
-                elif (lexeme == '//'):
+                """ if (lexeme == '/'):
+                    return Token(lexeme, '') """
+                if (lexeme == '//'):
                     self.cursor.set_position(len(line))
                     return
                 elif (lexeme == '/*'):
-                    self.find_end_block_comment(line)
+                    return self.find_end_block_comment(line)
             self.cursor.forward()
 
     def analyze_string(self, line):
@@ -92,9 +92,10 @@ class LexicalAnalyzer():
         return self.symbol_table.get_table()
 
     def start_analyze(self):
-        line_count = 1
+        line_count = 0
         """ iterate lines  """
-        for line in self.code:
+        while line_count < len(self.code):
+            line = self.code[line_count]
             """ checks if not have an open comment """
             if (not self.is_comment_open):
                 while self.cursor.get_position() < len(line):
@@ -104,8 +105,8 @@ class LexicalAnalyzer():
                         self.add_token(token)
                         self.cursor.backward()
                     elif (char == '/'):  # comments delimiters or / operator
-                        token = self.analyze_comments_delimiters(line)
-                        self.add_token(token)
+                        comment_closed_flag = self.analyze_comments_delimiters(
+                            line)
                     elif (delimiters.match(char)):  # delimiters
                         self.add_token(Token(char, ''))
                     elif (digit.match(char)):
@@ -115,13 +116,16 @@ class LexicalAnalyzer():
                         self.add_token(token)
 
                     self.cursor.forward()
+
+                if (not comment_closed_flag):
+                    line_count += 1
+                    self.cursor.to_start()
+                comment_closed_flag = False
+
             else:
                 """ search for the end comment """
-                self.find_end_block_comment(line)
-
-            """ next line count """
-            line_count += 1
-            """ set cursor to line begin """
-            self.cursor.to_start()
+                if (not self.find_end_block_comment(line)):
+                    line_count += 1
+                    self.cursor.to_start()
 
         return self
