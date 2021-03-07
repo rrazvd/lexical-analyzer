@@ -5,6 +5,12 @@ class Cursor():
     def get_position(self):
         return self.__position
 
+    def get_look_ahead(self):
+        return self.__position + 1
+
+    def get_double_look_ahead(self):
+        return self.__position + 2
+
     def forward(self):
         self.__position += 1
 

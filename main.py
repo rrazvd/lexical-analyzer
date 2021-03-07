@@ -17,6 +17,9 @@ for _input in inputs:
         """ get tokens & symbol table and write them to the output file """
         tokens = la.get_tokens()
         with open('./output/saida' + re.findall('\d+', _input)[0] + '.txt', 'w') as w:
-            w.write(str(la.get_symbol_table()) + '\n')
+            w.write(la.get_symbol_table().to_string() + '\n')
             for token in tokens:
-                w.write(token.to_string()+'\n')
+                if (token.get_name() == ';'):
+                    w.write(token.to_string()+'\n')
+                else:
+                    w.write(token.to_string() + ' ')
