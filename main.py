@@ -29,3 +29,6 @@ for _input in inputs:
                 elif (token.get_name() == 'CMF'):
                     print('open string: line ' +
                           str(token.get_pos()[0] + 1) + ' column ' + str(token.get_pos()[1]))
+                elif (token.get_name() == 'CoMF'):
+                    print('open comment: line ' +
+                          str(token.get_pos()[0] + 1) + ' column ' + str(token.get_pos()[1]))
