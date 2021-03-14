@@ -24,13 +24,16 @@ class LexicalAnalyzer():
         while self.cursor.get_position() < len(line):
             char = line[self.cursor.get_position()]
             if (char == '*'):
-                look_ahead_char = line[self.cursor.get_look_ahead()]
-                if (look_ahead_char == '/'):
-                    self.is_comment_open = False
-                    self.cursor.forward()
-                    return None
-                else:
-                    self.is_comment_open = True
+                try:
+                    look_ahead_char = line[self.cursor.get_look_ahead()]
+                    if (look_ahead_char == '/'):
+                        self.is_comment_open = False
+                        self.cursor.forward()
+                        return None
+                    else:
+                        self.is_comment_open = True
+                except (IndexError):
+                    self.is_comment_open = True          
             lexeme += char
             self.cursor.forward()
         return Token('CoMF', lexeme, pos)    
@@ -49,23 +52,40 @@ class LexicalAnalyzer():
 
         return self.symbol_table.get_token(lexeme, pos)
 
-    """ analyze numbers """
-    def analyze_numbers(self, line):
+    def analyze_numbers(self,line):    
         pos = (self.line_count, self.cursor.get_position())
         lexeme = line[pos[1]]
-        while self.cursor.get_look_ahead() < len(line):
-            look_ahead_char = line[self.cursor.get_look_ahead()]
-            if (digit.match(look_ahead_char)):
-                lexeme += look_ahead_char
-            elif (look_ahead_char == '.'):
-                double_look_ahead_char = line[(
-                    self.cursor.get_double_look_ahead())]
-                if (digit.match(double_look_ahead_char)):
-                    lexeme += look_ahead_char
+        self.cursor.forward()
+        while self.cursor.get_position() < len(line):
+            char = line[self.cursor.get_position()]
+            if (digit.match(char)):
+                lexeme += char
+            elif (char == '.'):
+                lexeme += char
+                try: 
+                    look_ahead_char = line[self.cursor.get_look_ahead()]
+                    if (digit.match(look_ahead_char)):
+                        self.cursor.forward()  
+                        while self.cursor.get_position() < len(line):
+                            char = line[self.cursor.get_position()]
+                            if (digit.match(char)):
+                                lexeme += char
+                            elif (char == '.'):
+                                lexeme += char
+                                return Token('NMF', lexeme, pos) 
+                            else:
+                                self.cursor.backward()
+                                return Token('NRO', lexeme, pos)
+                            self.cursor.forward()      
+                    else:
+                        return Token('NMF', lexeme, pos)
+                except(IndexError):
+                    return Token('NMF', lexeme, pos) 
             else:
-                return Token('NRO', lexeme, pos)
+                self.cursor.backward()
+                return Token('NRO', lexeme, pos)    
             self.cursor.forward()
-        return Token('NRO', lexeme, pos)
+        return Token('NRO', lexeme, pos)        
 
     """ analyze strings """
     def analyze_string(self, line):
@@ -75,13 +95,16 @@ class LexicalAnalyzer():
         while self.cursor.get_position() < len(line):
             char = line[self.cursor.get_position()]
             if (char == '\\'):  # if find \
-                look_ahead_char = line[self.cursor.get_look_ahead()]
-                if (look_ahead_char == '\"'):  # check if \"
-                    lexeme += look_ahead_char
-                    self.cursor.forward()
-                elif (look_ahead_char == '\\'):  # check if \\
-                    lexeme += char
-                    self.cursor.forward()
+                try:
+                    look_ahead_char = line[self.cursor.get_look_ahead()]
+                    if (look_ahead_char == '\"'):  # check if \"
+                        lexeme += look_ahead_char
+                        self.cursor.forward()
+                    elif (look_ahead_char == '\\'):  # check if \\
+                        lexeme += char
+                        self.cursor.forward()
+                except(IndexError):
+                    return Token('CMF', lexeme, pos)
             elif (string_ascii.match(char)):  # check allowed ascii character
                 lexeme += char
             elif (char == '\"'):  # check end of string
