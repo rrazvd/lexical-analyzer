@@ -1,3 +1,4 @@
+""" this class represents a Token """
 class Token():
     def __init__(self, name, attribute, pos):
         self.__name = name

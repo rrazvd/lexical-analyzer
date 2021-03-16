@@ -11,24 +11,42 @@ for _input in inputs:
     """ open input file and store content in code var"""
     with open('./input/' + _input, 'r') as code:
 
-        """ creates a LexicalAnalyzer sending code content and start analyze """
+        """ creates a LexicalAnalyzer sending code content """
         la = LexicalAnalyzer(code.readlines())
 
-        """ get tokens & symbol table and write them to the output file """
-        tokens = la.get_tokens()
-        with open('./output/saida' + re.findall('\d+', _input)[0] + '.txt', 'w') as w:
-            """  w.write(la.get_symbol_table().to_string() + '\n') """
-            for token in tokens:
-                w.write(token.to_string()+'\n')
-                if(token.get_name() == 'SIB'):
-                    print('invalid character \"' + token.get_attribute() + '\": line ' + str(token.get_pos()[0] + 1) +
-                          ' column ' + str(token.get_pos()[1]))
-                elif (token.get_name() == 'OpMF'):
-                    print('missing character \"' + token.get_attribute() + '\": line ' +
-                          str(token.get_pos()[0] + 1) + ' column ' + str(token.get_pos()[1] + 1))
-                elif (token.get_name() == 'CMF'):
-                    print('open string: line ' +
-                          str(token.get_pos()[0] + 1) + ' column ' + str(token.get_pos()[1]))
-                elif (token.get_name() == 'CoMF'):
-                    print('open comment: line ' +
-                          str(token.get_pos()[0] + 1) + ' column ' + str(token.get_pos()[1]))
+        """ get tokens and errors list """
+        tokens, errors = la.get_tokens()
+        
+        output_number = re.findall('\d+', _input)[0]
+        with open('./output/saida' + output_number + '.txt', 'w') as w:
+            print ('\n----------------- Output '+str(output_number)+' -----------------')
+            if tokens:
+                for token in tokens:
+                    w.write(token.to_string() + '\n')
+                w.write("\n")
+            if errors:
+                print('Lexical analysis failed! Errors found: ' + str(len(errors)))
+                w.write('---------------------------------------------\n')
+                w.write('Lexical analysis failed! Errors found: ' + str(len(errors)) + '\n')
+                for error in errors: 
+                    w.write(error.to_string() + '\n')
+                    if(error.get_name() == 'SIB'):
+                        print('invalid character \"' + error.get_attribute() + '\": line ' + str(error.get_pos()[0] + 1) +
+                                ' column ' + str(error.get_pos()[1]))
+                    elif (error.get_name() == 'OpMF'):
+                        print('missing character \"' + error.get_attribute() + '\": line ' +
+                                str(error.get_pos()[0] + 1) + ' column ' + str(error.get_pos()[1] + 1))
+                    elif (error.get_name() == 'CMF'):
+                        print('open string: line ' +
+                                str(error.get_pos()[0] + 1) + ' column ' + str(error.get_pos()[1]))
+                    elif (error.get_name() == 'CoMF'):
+                        print('open comment: line ' +
+                                str(error.get_pos()[0] + 1) + ' column ' + str(error.get_pos()[1]))
+                    elif (error.get_name() == 'NMF'):
+                        print('invalid number: line ' +
+                                str(error.get_pos()[0] + 1) + ' column ' + str(error.get_pos()[1]))
+            else:
+                w.write('---------------------------------------------\n')
+                w.write('Lexical analysis completed successfully!')
+                print('Lexical analysis completed successfully!')
+

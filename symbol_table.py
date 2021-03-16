@@ -1,31 +1,31 @@
 from token import Token
 import json
 
-
+""" this class represents a Symbol Table that contains info about identifiers and reserved words """
 class SymbolTable():
     def __init__(self, words):
         self.__table = {}
         self.add_words(words)
 
-    def add_words(self, words):
+    def add_words(self, words): # add reserverd words
         for w in words:
             self.__table[w] = {"type": "PRE", 'pos': []}
 
-    def get_table(self):
+    def get_table(self): # returns dict table
         return self.__table
 
     def get_token(self, lexeme, pos):
-        if lexeme in self.__table:
+        if lexeme in self.__table: # if the lexeme in the table
             _type = self.__table[lexeme]['type']
-            if _type == 'PRE':
-                self.__table[lexeme]['pos'].append(pos)
-                return Token(_type, lexeme, pos)
-            elif _type == 'IDE':
-                self.__table[lexeme]['pos'].append(pos)
-                return Token(_type, lexeme, pos)
+            if _type == 'PRE': # if a reserved word
+                self.__table[lexeme]['pos'].append(pos) # append position
+                return Token(_type, lexeme, pos) # return reserved word token
+            elif _type == 'IDE': # elif a identifier
+                self.__table[lexeme]['pos'].append(pos) # append position
+                return Token(_type, lexeme, pos) # return identifier token
         else:  # create identifier token
             self.__table[lexeme] = {'type': 'IDE', 'pos': [pos]}
-            return Token(self.__table[lexeme]['type'], lexeme, pos)
+            return Token(self.__table[lexeme]['type'], lexeme, pos) # return identifier token
 
-    def to_string(self):
+    def to_string(self): # returns a json string
         return json.dumps(self.__table, default=lambda x: x.__dict__, ensure_ascii=False, indent=4)
