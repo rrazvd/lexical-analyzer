@@ -28,6 +28,7 @@ A Lexical Analyzer developed for Problem Based Learning of Programming Language 
 
 | Type | Token |
 | -------------------- | 
+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | Reserved word | PRE |
 | Identifier | IDE |
 | Number | NRO |
