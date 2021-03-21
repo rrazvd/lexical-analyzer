@@ -23,3 +23,21 @@ A Lexical Analyzer developed for Problem Based Learning of Programming Language 
 | Delimiters | `;` `,` `()` `[]` `{}` `.` |
 | String | "(letter \| digit \| symbol \| `\"`)* " |
 | Symbol | ASCII 32 to 126 (except ASCII 34) |
+
+# Tokens
+
+| Type | Token |
+| -------------------- | 
+| Reserved word | PRE |
+| Identifier | IDE |
+| Number | NRO |
+| Delimiter | DEL |
+| Relational operator | REL |
+| Logical operator | LOG |
+| Arithmetic operator | ART |
+| String | CAD |
+| Invalid symbol | SIB |
+| Malformed string | CMF |
+| Malformed number | NMF |
+| Malformed comment | CoMF |
+| Malformed operator | OpMF |
