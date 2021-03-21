@@ -4,7 +4,9 @@ from lexical_analyzer import LexicalAnalyzer
 
 """ Aluno: Rafael Azevedo
     Problema 1: De volta ao novo normal.
-    EXA869 - MI - PROCESSADORES DE LINGUAGEM DE PROGRAMAÇÃO """
+    EXA869 - MI - PROCESSADORES DE LINGUAGEM DE PROGRAMAÇÃO -
+    2020.1 - Curso de Engenharia de Computação -
+    - Universidade Estadual de Feira de Santana. """
 
 
 """get list of input files from input folder """
@@ -23,7 +25,7 @@ for _input in inputs:
         tokens, errors = la.get_tokens()
         
         output_number = re.findall('\d+', _input)[0]
-        with open('./output/saida' + output_number + '.txt', 'w') as w:
+        with open('./output/output' + output_number + '.txt', 'w') as w:
             print ('\n----------------- Output '+str(output_number)+' -----------------')
             if tokens:
                 for token in tokens:
