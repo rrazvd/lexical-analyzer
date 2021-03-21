@@ -5,7 +5,7 @@ import re
 reserved_words = ['var', 'const', 'typedef', 'struct',
                   'extends', 'procedure', 'function', 'start',
                   'return', 'if', 'else', 'then', 'while', 'read',
-                  'print', 'int', 'float', 'write',  'real', 'boolean', 'string', 'true',
+                  'print', 'int', 'real', 'boolean', 'string', 'true',
                   'false', 'global', 'local']
 
 delimiters = re.compile(r'[;\,\(\)\{\}\[\]\.]') # ; , ( ) { } [ ] .

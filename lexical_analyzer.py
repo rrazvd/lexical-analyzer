@@ -8,7 +8,7 @@ class LexicalAnalyzer():
 
     def __init__(self, code):
         self.code = code # input code array per line
-        self.line_count = 0 # line counter
+        self.line_counter = 0 # line counter
         self.tokens, self.errors  = [], [] # create token list and error token list
         self.is_open_comment = False # boolean to know if there is an open comment
         self.comment_token = None  # used for store the comment token
@@ -19,7 +19,7 @@ class LexicalAnalyzer():
     """ this function looks for the end of block comment: '*/',
     if it finds, set is_open_comment to True, else set is_open_comment to False """
     def find_end_block_comment(self, line):
-        pos = (self.line_count, self.cursor.get_position())
+        pos = (self.line_counter, self.cursor.get_position())
         lexeme = '' # set first lexeme character
         while self.cursor.get_position() < len(line):
             char = line[self.cursor.get_position()]
@@ -183,11 +183,11 @@ class LexicalAnalyzer():
         return self.symbol_table
 
     def start_analyze(self):
-        while self.line_count < len(self.code):  # iterate between lines indexes
-            line = self.code[self.line_count] # get atual line
+        while self.line_counter < len(self.code):  # iterate between lines indexes
+            line = self.code[self.line_counter] # get atual line
             if (not self.is_open_comment):  # checks if not have an open comment
                 while self.cursor.get_position() < len(line):  # iterate between characters indexes             
-                    pos = (self.line_count, self.cursor.get_position()) # save position L x C
+                    pos = (self.line_counter, self.cursor.get_position()) # save position L x C
                     char = line[pos[1]] # get atual character
                     if (letter.match(char)):  # identifiers or words
                         token = self.analyze_id_or_word(line, pos)
@@ -215,13 +215,13 @@ class LexicalAnalyzer():
                     self.add_token(token)  # add resulting token 
                     self.cursor.forward()  # moves the cursor forward
                 
-                self.line_count += 1 # go to next line
+                self.line_counter += 1 # go to next line
                 self.cursor.to_start() # set cursor to start of line
             
             else:
                 self.find_end_block_comment(line) # search for the end of block comment
                 if(self.is_open_comment): # if still open, keep search in next lines
-                    self.line_count += 1
+                    self.line_counter += 1
                     self.cursor.to_start() 
                 else:
                     self.cursor.forward() # else, moves cursor forward to continue reading the rest of line

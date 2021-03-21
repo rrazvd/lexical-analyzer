@@ -2,6 +2,11 @@ import os
 import re
 from lexical_analyzer import LexicalAnalyzer
 
+""" Aluno: Rafael Azevedo
+    Problema 1: De volta ao novo normal.
+    EXA869 - MI - PROCESSADORES DE LINGUAGEM DE PROGRAMAÇÃO """
+
+
 """get list of input files from input folder """
 inputs = os.listdir('./input')
 
