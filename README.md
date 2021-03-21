@@ -2,10 +2,10 @@
 A Lexical Analyzer developed for Problem Based Learning of Programming Language Processors discipline.
 
 # Getting started
-1 - Clone repository from the main branch
-2 - Create input ("/input") and output ("/output") folders on root
-3 - Create a input file (Ex.: "input1.txt") on input folder and write your code
-4 - Run python3 main.py to analyze your code and check the output folder
+1. Clone repository from the main branch
+2. Create input ("/input") and output ("/output") folders on root
+3. Create a input file (Ex.: "input1.txt") on input folder and write your code
+4. Run python3 main.py to analyze your code and check the output folder
 
 # Lexical structure of language
 
