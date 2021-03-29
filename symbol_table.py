@@ -1,7 +1,9 @@
 from token import Token
 import json
 
-""" this class represents a Symbol Table that contains info about identifiers and reserved words """
+"""
+This class represents a Symbol Table that contains info about identifiers and reserved words.
+"""
 class SymbolTable():
     def __init__(self, words):
         self.__table = {}

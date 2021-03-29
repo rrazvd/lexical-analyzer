@@ -3,7 +3,9 @@ from symbol_table import SymbolTable
 from token import Token
 from constants import reserved_words, delimiters, letter, digit, string_ascii, letter_digit_under, arithmetic_operators, relational_operators, errors_name
 
-""" This Class implements a Lexical Analyzer that recognizes tokens through finite automata """
+""" 
+This Class implements a Lexical Analyzer that recognizes tokens through finite automata. 
+"""
 class LexicalAnalyzer():
 
     def __init__(self, code):
@@ -16,13 +18,20 @@ class LexicalAnalyzer():
         self.symbol_table = SymbolTable(reserved_words) # adds reserved words in symbol table
         self.start_analyze() # then the analyze begins
 
+    """ 
+    This function analyze each code line and get tokens.
+    """
     def start_analyze(self):
+        
         while self.line_counter < len(self.code):  # iterate between lines indexes
             line = self.code[self.line_counter] # get atual line
+            
             if (not self.is_open_comment):  # checks if not have an open comment
+               
                 while self.cursor.get_position() < len(line):  # iterate between characters indexes             
                     pos = (self.line_counter, self.cursor.get_position()) # save position L x C
                     char = line[pos[1]] # get atual character
+                    
                     if (letter.match(char)):  # identifiers or words
                         token = self.analyze_id_or_word(line, pos)
                     elif (digit.match(char)):  # numbers
@@ -54,6 +63,7 @@ class LexicalAnalyzer():
             
             else:
                 self.find_end_block_comment(line) # search for the end of block comment
+                
                 if(self.is_open_comment): # if still open, keep search in next lines
                     self.line_counter += 1
                     self.cursor.to_start() 
@@ -63,8 +73,10 @@ class LexicalAnalyzer():
         self.add_token(self.comment_token) #if at the end of code there is an open comment, thus add it to the token list
 
 
-    """ this function looks for the end of block comment: '*/',
-    if it finds, set is_open_comment to True, else set is_open_comment to False """
+    """ 
+    This function looks for the end of block comment: '*/',
+    if it finds, set is_open_comment to True, else set is_open_comment to False.
+    """
     def find_end_block_comment(self, line):
         pos = (self.line_counter, self.cursor.get_position())
         lexeme = '' # set first lexeme character
@@ -85,7 +97,9 @@ class LexicalAnalyzer():
             self.cursor.forward() # moves the cursor forward
         return Token('CoMF', lexeme, pos) # if the comment was not been closed, return malformed comment 
 
-    """ this funcion analyze identifiers or reserved word lexemes """
+    """
+    This funcion analyze identifiers or reserved word lexemes.
+    """
     def analyze_id_or_word(self, line, pos):
         lexeme = line[pos[1]] # set first lexeme character
         while self.cursor.get_look_ahead() < len(line):
@@ -98,7 +112,9 @@ class LexicalAnalyzer():
 
         return self.symbol_table.get_token(lexeme, pos) # fetch token from symbol table
 
-    """ this funcion analyze numbers lexemes """
+    """
+    This funcion analyze numbers lexemes.
+    """
     def analyze_numbers(self,line, pos):    
         lexeme = line[pos[1]] # set first lexeme character
         self.cursor.forward() # moves the cursor forward
@@ -133,7 +149,9 @@ class LexicalAnalyzer():
             self.cursor.forward()  # moves the cursor forward     
         return Token('NRO', lexeme, pos)  # return a token number   
 
-    """ this function analyze strings lexemes"""
+    """
+    This function analyze strings lexemes.
+    """
     def analyze_string(self, line, pos):
         lexeme = line[pos[1]] # set first lexeme character
         self.cursor.forward()
@@ -160,7 +178,9 @@ class LexicalAnalyzer():
             self.cursor.forward()
         return Token('CMF', lexeme, pos)
 
-    """ this function analyze arithmetic, relational and '!' operators"""
+    """
+    This function analyze arithmetic, relational and '!' operators.
+    """
     def analyze_next_char(self, line, target_char, pos):
         lexeme = line[pos[1]]  # set first lexeme character
         try:
@@ -174,7 +194,9 @@ class LexicalAnalyzer():
         except(IndexError):
             return Token(self.get_operator_type(lexeme), lexeme, pos) # return corresponding token
 
-    """ this function check the type of operators"""
+    """
+    This function check the type of operators.
+    """
     def get_operator_type(self, lexeme):
         if (lexeme == '!'):
             return 'LOG'
@@ -183,7 +205,9 @@ class LexicalAnalyzer():
         elif (relational_operators.match(lexeme)):
             return 'REL'
 
-    """ this function analyzes if the lexeme found is logical operator """
+    """
+    This function analyzes if the lexeme found is logical operator.
+    """
     def analyze_logical_operator(self, line, target_char, pos):
         lexeme = line[pos[1]] # set first lexeme character
         try:
@@ -197,7 +221,9 @@ class LexicalAnalyzer():
         except(IndexError):
             return Token('OpMF', lexeme, pos)
 
-    """ this function analyzes if the lexeme found is a division operator or comment symbol """
+    """
+    This function analyzes if the lexeme found is a division operator or comment symbol.
+    """
     def analyze_divisor_operator_or_comment(self, line, pos):
         lexeme = line[pos[1]] # set first lexeme character
         try:
@@ -213,7 +239,9 @@ class LexicalAnalyzer():
         except: 
             return Token('ART', lexeme, pos)  # return an arithmetic operator token
 
-    """ this method adds a new token to the token list """
+    """
+    This method adds a new token to the token list.
+    """
     def add_token(self, token):
         if(token != None):
             if(token.get_name() in errors_name):
@@ -221,10 +249,14 @@ class LexicalAnalyzer():
             else:
                 self.tokens.append(token) # add to token list
 
-    """ this method returns token list and token error list """
+    """
+    This method returns token list and token error list.
+    """
     def get_tokens(self):
         return (self.tokens, self.errors)
 
-    """ this method returns symbol table dict """
+    """
+    This method returns symbol table dict.
+    """
     def get_symbol_table(self):
         return self.symbol_table

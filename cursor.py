@@ -1,4 +1,6 @@
-""" this class represents a cursor that moves inside the code """
+"""
+This class represents a cursor that moves inside the code.
+"""
 class Cursor():
     def __init__(self): 
         self.__position = 0

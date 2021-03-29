@@ -1,4 +1,6 @@
-""" this file has all the constants used by the lexical analyzer """
+"""
+This file has all the constants used by the lexical analyzer.
+"""
 
 import re
 

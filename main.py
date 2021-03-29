@@ -2,27 +2,22 @@ import os
 import re
 from lexical_analyzer import LexicalAnalyzer
 
-""" Aluno: Rafael Azevedo
+""" 
+    Aluno: Rafael Azevedo
     Problema 1: De volta ao novo normal.
     EXA869 - MI - PROCESSADORES DE LINGUAGEM DE PROGRAMAÇÃO -
     2020.1 - Curso de Engenharia de Computação -
-    - Universidade Estadual de Feira de Santana. """
+    - Universidade Estadual de Feira de Santana. 
+"""
 
+inputs = os.listdir('./input') # get list of input files from input folder
 
-"""get list of input files from input folder """
-inputs = os.listdir('./input')
+for _input in inputs: # iterate each input file
+    
+    with open('./input/' + _input, 'r') as code: # open input file and store content in code var
 
-""" iterate each input file """
-for _input in inputs:
-
-    """ open input file and store content in code var"""
-    with open('./input/' + _input, 'r') as code:
-
-        """ creates a LexicalAnalyzer sending code content """
-        la = LexicalAnalyzer(code.readlines())
-
-        """ get tokens and errors list """
-        tokens, errors = la.get_tokens()
+        la = LexicalAnalyzer(code.readlines()) # creates a LexicalAnalyzer sending code content 
+        tokens, errors = la.get_tokens() # get tokens and errors list
         
         output_number = re.findall('\d+', _input)[0]
         with open('./output/output' + output_number + '.txt', 'w') as w:
