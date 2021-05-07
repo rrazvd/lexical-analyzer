@@ -1,8 +1,9 @@
 """
-This file has all the constants used by the lexical analyzer.
+This file has all the constants used by the compiler.
 """
 
 import re
+from enum import Enum
 
 reserved_words = ['var', 'const', 'typedef', 'struct',
                   'extends', 'procedure', 'function', 'start',
@@ -18,3 +19,26 @@ string_ascii = re.compile(r'[\x20\x21\x23-\x5B\x5D-\x7E]') # space, !, # - [, ] 
 arithmetic_operators = re.compile(r'\+|\-|\*|\/') # + - * /
 relational_operators = re.compile(r'==|!=|>|>=|<|<=|=') # == != > >= < <= =
 errors_name = ['SIB', 'OpMF', 'CMF', 'NMF', 'CoMF'] 
+
+'''
+This enum contains tokens names.
+'''
+class Tokens(Enum):
+    KEYWORD = 'PRE'
+    IDENTIFIER = "IDE"
+    NUMBER = 'NRO'
+    DELIMITER = "DEL"
+    OP_RELATIONAL = 'REL'
+    OP_LOGICAL = 'LOG'
+    OP_ARITHMETIC = 'ART' 
+    INVALID_SYMBOL = 'SIB'
+    STRING = 'CAD'
+
+'''
+This enum contains errors tokens names.
+'''
+class Errors(Enum):
+    MF_NUMBER = 'NMF' 
+    MF_COMMENT = 'CoMF'
+    MF_OPERATOR = 'OpMF'
+    MF_STRING = 'CMF'

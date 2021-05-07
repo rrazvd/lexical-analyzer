@@ -1,4 +1,5 @@
 from token import Token
+from constants import Tokens
 import json
 
 """
@@ -11,7 +12,7 @@ class SymbolTable():
 
     def add_words(self, words): # add reserverd words
         for w in words:
-            self.__table[w] = {"type": "PRE", 'pos': []}
+            self.__table[w] = {"type": Tokens.KEYWORD, 'pos': []}
 
     def get_table(self): # returns dict table
         return self.__table
@@ -19,14 +20,14 @@ class SymbolTable():
     def get_token(self, lexeme, pos):
         if lexeme in self.__table: # if the lexeme in the table
             _type = self.__table[lexeme]['type']
-            if _type == 'PRE': # if a reserved word
+            if _type == Tokens.KEYWORD: # if a reserved word
                 self.__table[lexeme]['pos'].append(pos) # append position
                 return Token(_type, lexeme, pos) # return reserved word token
-            elif _type == 'IDE': # elif a identifier
+            elif _type == Tokens.IDENTIFIER: # elif a identifier
                 self.__table[lexeme]['pos'].append(pos) # append position
                 return Token(_type, lexeme, pos) # return identifier token
         else:  # create identifier token
-            self.__table[lexeme] = {'type': 'IDE', 'pos': [pos]}
+            self.__table[lexeme] = {'type': Tokens.IDENTIFIER, 'pos': [pos]}
             return Token(self.__table[lexeme]['type'], lexeme, pos) # return identifier token
 
     def to_string(self): # returns a json string
