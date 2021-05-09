@@ -1,6 +1,6 @@
 from cursor import Cursor
 from symbol_table import SymbolTable
-from token import Token
+from token2 import Token
 from constants import delimiters, letter, digit, string_ascii, letter_digit_under, arithmetic_operators, relational_operators, errors_name
 from constants import Tokens, Errors
 

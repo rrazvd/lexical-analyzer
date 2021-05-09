@@ -20,7 +20,7 @@ for _input in inputs: # iterate each input file
 
         c = Compiler(code.readlines())
         tokens, errors = c.get_tokens() # get tokens and errors list
-        print(Tokens.DELIMITER.value)
+
         output_number = re.findall('\d+', _input)[0]
         with open('./output/output' + output_number + '.txt', 'w') as w:
             #print ('\n----------------- Output '+str(output_number)+' -----------------')

@@ -1,4 +1,4 @@
-from token import Token
+from token2 import Token
 from constants import Tokens
 import json
 
