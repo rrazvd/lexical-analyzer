@@ -2,6 +2,7 @@ from cursor import Cursor
 from firsts import Firsts
 from constants import Tokens
 from multipledispatch import dispatch
+
 """ 
 This Class implements a syntactic analyzer. 
 """
@@ -15,7 +16,6 @@ class Parser():
 
     # <Program>
     def program(self): 
-
         if (self.check_firsts(Firsts.STRUCT_BLOCK)): # <Structs>
             self.structs()
 
@@ -24,13 +24,13 @@ class Parser():
 
         if (self.consume('var')): # <Var Block>
             self.var_block()
-
+    
         if (self.consume('procedure')): # <Start Block>
             self.start_block()
         else:
             self.handle_error('procedure')
 
-        if(self.check_firsts(Firsts.DECLS)):  # <Decls>
+        if (self.check_firsts(Firsts.DECLS)):  # <Decls>
             self.decls()
 
     # <Structs>
@@ -53,7 +53,7 @@ class Parser():
                 else:
                     self.handle_error('{')    
             else:
-                self.handle_error(Tokens.IDENTIFIER.value)
+                self.handle_error(Tokens.IDENTIFIER)
         elif(self.consume('typedef')):
             if(self.consume('struct')):
                 if(self.consume('extends')):
@@ -66,7 +66,7 @@ class Parser():
                             if (not self.consume(';')):
                                 self.handle_error(';')
                         else:
-                            self.handle_error(Tokens.IDENTIFIER.value)
+                            self.handle_error(Tokens.IDENTIFIER)
                     else:
                         self.handle_error('}')   
                 else:
@@ -77,7 +77,7 @@ class Parser():
     # <Extends>
     def extends(self):
         if (not self.consume(Tokens.IDENTIFIER)):
-            self.handle_error(Tokens.IDENTIFIER.value)
+            self.handle_error(Tokens.IDENTIFIER)
 
     # <Const Block>
     def const_block(self):
@@ -91,11 +91,85 @@ class Parser():
     # <Var Block>
     def var_block(self):
         if(self.consume('{')):
-            #self.var_decls()
+            if(self.check_firsts(Firsts.VAR_DECLS)):
+                self.var_decls()
+
             if (not self.consume('}')):
                 self.handle_error('}')
         else:
             self.handle_error('{')         
+
+    # <Var Decls>
+    def var_decls(self):
+        self.var_decl()
+        if(self.check_firsts(Firsts.VAR_DECLS)):
+            self.var_decls()
+
+    # <Var Decl>
+    def var_decl(self):
+        if (self.check_firsts(Firsts.TYPE)):
+            self._type()
+            if (self.consume(Tokens.IDENTIFIER)):
+                self.var()
+                if (self.check_firsts(Firsts.VAR_LIST)):
+                    self.var_list()
+                else:
+                    self.handle_error(Firsts.VAR_LIST)    
+            else:
+                self.handle_error(Tokens.IDENTIFIER)    
+        elif (self.consume('typedef')):
+            self.type_def()
+        elif (self.consume(Tokens.IDENTIFIER)):
+            self.var()    # dois ids??
+
+    # <Type>
+    def _type(self):
+        self.consume(Firsts.TYPE)
+        # struct id não eh tratado
+
+    # <Typedef>
+    def type_def(self):
+        if (self.check_firsts(Firsts.TYPE)):
+            self._type()
+            if (self.consume(Tokens.IDENTIFIER)):
+                if (not self.consume(';')):
+                    self.handle_error(';')
+            else:
+                self.handle_error(Tokens.IDENTIFIER)  
+        else:
+            self.handle_error(Firsts.TYPE)        
+
+    # <Var>
+    def var(self):
+        if (self.consume('[')):
+            self.arrays()
+
+    # <Var List>
+    def var_list(self):
+        if (self.consume(',')):
+            if (self.consume(Tokens.IDENTIFIER)):
+                self.var()
+                if (self.check_firsts(Firsts.VAR_LIST)):
+                    self.var_list()
+            else:
+                self.handle_error(Tokens.IDENTIFIER)        
+        elif (self.consume('=')):
+            print('=')
+            # <Decl Atribute> <Var List>
+        elif (self.consume(';')):
+            pass
+
+    # <Arrays>
+    def arrays(self):
+        self.array()
+        if (self.consume('[')):
+            self.arrays()
+
+    # <Array>
+    def array(self):
+        # <Index>
+        if (not self.consume(']')):
+            self.handle_error(']')    
 
     # <Start Block>
     def start_block(self):
@@ -130,7 +204,7 @@ class Parser():
             else:
                 self.handle_error('(')
         else:
-            self.handle_error(Tokens.IDENTIFIER.value)
+            self.handle_error(Tokens.IDENTIFIER)
 
     # <Proc Decl>
     def proc_decl(self):
@@ -144,17 +218,28 @@ class Parser():
             else:
                 self.handle_error('(')
         else:
-            self.handle_error(Tokens.IDENTIFIER.value)
+            self.handle_error(Tokens.IDENTIFIER)
 
     # <Func Block>
     def func_block(self):
         if (self.consume('{')):
-            #varblock
+            if (self.consume('var')): # <Var Block>
+                self.var_block()
             #funcstms
             if (not self.consume('}')):
                 self.handle_error('}')    
         else:
             self.handle_error('{')
+
+    def check_firsts(self,firsts):
+        token = self.get_token()
+        if (token != None):
+            if (token.get_attribute() in firsts.value):
+                return True
+            else:
+                return False
+        else:
+            return False  
 
     @dispatch(str)
     def consume(self, terminal):
@@ -180,18 +265,22 @@ class Parser():
             else:
                 return False
         else:
-            return False        
+            return False
 
-    def check_firsts(self,firsts):
+    @dispatch(Firsts)
+    def consume(self, firsts):
         token = self.get_token()
         if (token != None):
             if (token.get_attribute() in firsts.value):
+                self.parser_tokens.append(token)
+                self.cursor.forward()
                 return True
             else:
                 return False
         else:
-            return False        
-
+            return False                   
+      
+    @dispatch(str)
     def handle_error(self, expected):
         token = self.get_token()
         if (token != None):
@@ -200,6 +289,26 @@ class Parser():
         else:
             print('Synthatic Error: at the end of file expected \'' + expected + '\', but there are no more tokens.')
             exit()
+
+    @dispatch(Tokens)
+    def handle_error(self, expected):
+        token = self.get_token()
+        if (token != None):
+            pos = token.get_pos()
+            print('Synthatic Error: expected ' + expected.value + ', but received \'' + token.get_attribute() + '\' on line ' + str(pos[0] + 1))
+        else:
+            print('Synthatic Error: at the end of file expected \'' + expected + '\', but there are no more tokens.')
+            exit()   
+
+    @dispatch(Firsts)
+    def handle_error(self, expected):
+        token = self.get_token()
+        if (token != None):
+            pos = token.get_pos()
+            print('Synthatic Error: expected ' + str(expected.value) + ', but received \'' + token.get_attribute() + '\' on line ' + str(pos[0] + 1))
+        else:
+            print('Synthatic Error: at the end of file expected \'' + expected + '\', but there are no more tokens.')
+            exit()        
 
     def get_token(self):
         pos = self.cursor.get_position()
