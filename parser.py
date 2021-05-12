@@ -35,7 +35,7 @@ class Parser():
     # <Structs>
     def structs(self):
         self.struct_block()
-        if(self.check_firsts(Firsts.STRUCT_BLOCK)):  # <Decls>
+        if(self.check_firsts(Firsts.STRUCT_BLOCK)):
             self.structs()
 
     # <Struct Block>
@@ -125,7 +125,10 @@ class Parser():
             self.arrays()
 
         if (self.consume('=')):
-            self.decl_atribute()
+            if (self.check_firsts(Firsts.DECL_ATRIBUTE)):
+                self.decl_atribute()
+            else:
+                self.handle_error(Firsts.DECL_ATRIBUTE)     
         else:
             self.handle_error('=')
 
@@ -175,7 +178,7 @@ class Parser():
         elif (self.consume('typedef')):
             self.type_def()
         elif (self.consume(Tokens.IDENTIFIER)):
-            if (self.consume(Tokens.Identifier)):
+            if (self.consume(Tokens.IDENTIFIER)):
                 self.var()
                 if (self.check_firsts(Firsts.VAR_LIST)):
                     self.var_list()
@@ -185,9 +188,12 @@ class Parser():
                 self.handle_error(Tokens.IDENTIFIER)
 
     # <Type>
-    def _type(self):
-        self.consume(Firsts.TYPE)
-        # struct id não eh tratado
+    def _type(self):    
+        if (self.consume('struct')):
+            if (not self.consume(Tokens.IDENTIFIER)):
+                self.handle_error(Tokens.IDENTIFIER)
+        else:
+            self.consume(Firsts.TYPE)
 
     # <Typedef>
     def type_def(self):
@@ -218,8 +224,14 @@ class Parser():
             else:
                 self.handle_error(Tokens.IDENTIFIER)        
         elif (self.consume('=')):
-            print('=')
-            # <Decl Atribute> <Var List>
+            if (self.check_firsts(Firsts.DECL_ATRIBUTE)):
+                self.decl_atribute()
+                if (self.check_firsts(Firsts.VAR_LIST)):
+                    self.var_list()
+                else:
+                    self.handle_error(Firsts.VAR_LIST) 
+            else:
+                self.handle_error(Firsts.DECL_ATRIBUTE)          
         elif (self.consume(';')):
             pass
 
@@ -257,8 +269,38 @@ class Parser():
 
     # <Decl Atribute>
     def decl_atribute(self):
-        print ('decl atribute')
-        # <Array Decl> | <Expr>
+        if (self.consume('{')):
+            self.array_decl()
+        elif(self.check_firsts(Firsts.EXPR)):
+            self.expr()
+  
+
+    # <Array Decl>
+    def array_decl(self):
+        if (self.check_firsts(Firsts.ARRAY_DEF)):
+            self.array_def()
+            if (not self.consume('}')): 
+                self.handle_error('}')    
+        else:
+            self.handle_error(Firsts.ARRAY_DEF)
+
+    # <Array Def>
+    def array_def(self):
+        if (self.check_firsts(Firsts.EXPR)):
+            self.expr()
+            if (self.consume(',')):
+                self.array_expr()
+    
+    # <Array Expr>
+    def array_expr(self):
+        if (self.check_firsts(Firsts.ARRAY_DEF)):
+            self.array_def()
+        else:
+            self.handle_error(Firsts.ARRAY_DEF) 
+
+    # <Expr>
+    def expr(self):
+        self.consume(Firsts.EXPR)
 
     # <Func decls>
     def func_decl(self):
@@ -395,7 +437,7 @@ class Parser():
     def consume(self, firsts):
         token = self.get_token()
         if (token != None):
-            if (token.get_attribute() in firsts.value):
+            if (token.get_attribute() in firsts.value or token.get_name() in firsts.value):
                 self.parser_tokens.append(token)
                 self.cursor.forward()
                 return True

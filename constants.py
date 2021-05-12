@@ -49,11 +49,13 @@ class Firsts(Enum):
     PARAM_TYPE = ['int', 'real', 'boolean', 'string', 'struct', 'IDE']
     STRUCT_BLOCK = ['struct', 'typedef']
     VAR_DECLS = ['int', 'real', 'boolean', 'string', 'struct', 'typedef','IDE']
-    CONST_DECLS = ['int', 'real', 'boolean','string', 'struct', 'typedef', 'IDE']
+    CONST_DECLS = VAR_DECLS
     TYPE = ['int', 'real', 'boolean', 'string', 'struct']
     VAR_LIST = [',', '=', ';']
     CONST_LIST = [',', ';']
-    DECL_ATRIBUTE = ['{'] # incomplete
-
+    DECL_ATRIBUTE = ['{', '!', 'NRO', 'CAD', 'LOG', 'IDE', '(' ]
+    EXPR = ['!', 'NRO', 'CAD', 'LOG', 'IDE', '(' ] # need check
+    ARRAY_DEF = EXPR
+ 
 class Follows(Enum):
     START_BLOCK = ['function', 'procedure']    
