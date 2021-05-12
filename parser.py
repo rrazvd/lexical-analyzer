@@ -1,6 +1,5 @@
 from cursor import Cursor
-from firsts import Firsts
-from constants import Tokens
+from constants import Tokens, Firsts, Follows
 from multipledispatch import dispatch
 
 """ 
@@ -28,7 +27,7 @@ class Parser():
         if (self.consume('procedure')): # <Start Block>
             self.start_block()
         else:
-            self.handle_error('procedure')
+            self.handle_error('procedure') #, Follows.START_BLOCK)
 
         if (self.check_firsts(Firsts.DECLS)):  # <Decls>
             self.decls()
@@ -81,12 +80,68 @@ class Parser():
 
     # <Const Block>
     def const_block(self):
-        if (self.consume('{')):
-            # <Const Decls>
+        if (self.consume('{')): 
+            if(self.check_firsts(Firsts.CONST_DECLS)):
+                self.const_decls()
+
             if (not self.consume('}')):
                 self.handle_error('}')
         else:
             self.handle_error('{')
+
+    # <Const Decls>
+    def const_decls(self):
+        self.const_decl()
+        if(self.check_firsts(Firsts.CONST_DECLS)):
+            self.const_decls()
+
+    # <Const Decl>
+    def const_decl(self):
+        if (self.check_firsts(Firsts.TYPE)):
+            self._type()
+            if (self.consume(Tokens.IDENTIFIER)):
+                self.const()
+                if (self.check_firsts(Firsts.CONST_LIST)):
+                    self.const_list()
+                else:
+                    self.handle_error(Firsts.CONST_LIST)    
+            else:
+                self.handle_error(Tokens.IDENTIFIER)    
+        elif (self.consume('typedef')):
+            self.type_def()
+        elif (self.consume(Tokens.IDENTIFIER)):
+            if (self.consume(Tokens.Identifier)):
+                self.const()
+                if (self.check_firsts(Firsts.CONST_LIST)):
+                    self.const_list()
+                else:
+                    self.handle_error(Firsts.CONST_LIST)
+            else:
+                self.handle_error(Tokens.IDENTIFIER)
+
+    # <Const>
+    def const(self):
+        if (self.consume('[')):
+            self.arrays()
+
+        if (self.consume('=')):
+            self.decl_atribute()
+        else:
+            self.handle_error('=')
+
+    # <Const List>
+    def const_list(self):
+        if (self.consume(',')):
+            if (self.consume(Tokens.IDENTIFIER)):
+                self.const()
+                if (self.check_firsts(Firsts.CONST_LIST)):
+                    self.const_list()
+                else:
+                    self.handle_error(Firsts.CONST_LIST)    
+            else:
+                self.handle_error(Tokens.IDENTIFIER)       
+        elif (self.consume(';')):
+            pass
 
     # <Var Block>
     def var_block(self):
@@ -120,7 +175,14 @@ class Parser():
         elif (self.consume('typedef')):
             self.type_def()
         elif (self.consume(Tokens.IDENTIFIER)):
-            self.var()    # dois ids??
+            if (self.consume(Tokens.Identifier)):
+                self.var()
+                if (self.check_firsts(Firsts.VAR_LIST)):
+                    self.var_list()
+                else:
+                    self.handle_error(Firsts.VAR_LIST)
+            else:
+                self.handle_error(Tokens.IDENTIFIER)
 
     # <Type>
     def _type(self):
@@ -151,6 +213,8 @@ class Parser():
                 self.var()
                 if (self.check_firsts(Firsts.VAR_LIST)):
                     self.var_list()
+                else:
+                    self.handle_error(Firsts.VAR_LIST)    
             else:
                 self.handle_error(Tokens.IDENTIFIER)        
         elif (self.consume('=')):
@@ -181,7 +245,7 @@ class Parser():
     # <Decls>
     def decls(self):
         self.decl()
-        if(self.check_firsts(Firsts.DECLS)):  # <Decls>
+        if(self.check_firsts(Firsts.DECLS)): 
             self.decls()
 
     # <Decl>
@@ -191,26 +255,36 @@ class Parser():
         elif(self.consume('procedure')):
             self.proc_decl()    
 
+    # <Decl Atribute>
+    def decl_atribute(self):
+        print ('decl atribute')
+        # <Array Decl> | <Expr>
+
     # <Func decls>
     def func_decl(self):
-        #<Param Type>
-        if (self.consume(Tokens.IDENTIFIER)):
-            if(self.consume('(')):
-                #<Params>
-                if(self.consume(')')):
-                    self.func_block()
-                else:    
-                    self.handle_error(')')
+        if (self.check_firsts(Firsts.PARAM_TYPE)):
+            self.param_type()
+            if (self.consume(Tokens.IDENTIFIER)):
+                if(self.consume('(')):
+                    if (self.check_firsts(Firsts.PARAM_TYPE)):
+                        self.params()
+                    if(self.consume(')')):
+                        self.func_block()
+                    else:    
+                        self.handle_error(')')
+                else:
+                    self.handle_error('(')
             else:
-                self.handle_error('(')
+                self.handle_error(Tokens.IDENTIFIER)
         else:
-            self.handle_error(Tokens.IDENTIFIER)
+            self.handle_error(Firsts.PARAM_TYPE)        
 
     # <Proc Decl>
     def proc_decl(self):
         if (self.consume(Tokens.IDENTIFIER)):
             if(self.consume('(')):
-                #<Params>
+                if (self.check_firsts(Firsts.PARAM_TYPE)):
+                    self.params()
                 if(self.consume(')')):
                     self.func_block()
                 else:    
@@ -220,10 +294,60 @@ class Parser():
         else:
             self.handle_error(Tokens.IDENTIFIER)
 
+    # <Params>
+    def params(self):
+        self.param()
+        if (self.consume(',')):
+            self.params_list()
+    
+    # <Param>
+    def param(self):
+        self.param_type()
+        if (self.consume(Tokens.IDENTIFIER)):
+            if (self.consume('[')):
+                self.param_arrays()
+        else:
+            self.handle_error(Tokens.IDENTIFIER)    
+
+    # <Params list>
+    def params_list(self):
+        if (self.check_firsts(Firsts.PARAM_TYPE)):
+            self.param()
+            if (self.consume(',')):
+                self.params_list()
+        else:
+            self.handle_error(Firsts.PARAM_TYPE)
+
+    # <Param Type>
+    def param_type(self):
+        if (self.check_firsts(Firsts.TYPE)):
+            self._type()
+        elif (self.consume(Tokens.IDENTIFIER)):
+            pass
+    
+    # <Param Arrays>
+    def param_arrays(self):
+        if (self.consume(']')):
+            if (self.consume('[')):
+                self.param_mult_arrays()
+        else: 
+            self.handle_error(']') 
+
+    # <Param Mult Arrays>
+    def param_mult_arrays(self):
+        if(self.consume(Tokens.NUMBER)):
+            if(self.consume(']')):
+                if (self.consume('[')):
+                    self.param_mult_arrays()    
+            else:
+                self.handle_error(']')     
+        else:
+            self.handle_error(Tokens.NUMBER)   
+
     # <Func Block>
     def func_block(self):
         if (self.consume('{')):
-            if (self.consume('var')): # <Var Block>
+            if (self.consume('var')):
                 self.var_block()
             #funcstms
             if (not self.consume('}')):
@@ -234,7 +358,7 @@ class Parser():
     def check_firsts(self,firsts):
         token = self.get_token()
         if (token != None):
-            if (token.get_attribute() in firsts.value):
+            if (token.get_attribute() in firsts.value or token.get_name() in firsts.value):
                 return True
             else:
                 return False
@@ -285,9 +409,15 @@ class Parser():
         token = self.get_token()
         if (token != None):
             pos = token.get_pos()
-            print('Synthatic Error: expected \'' + expected + '\', but received \'' + token.get_attribute() + '\' on line ' + str(pos[0] + 1))
+            print('SyntaxError: expected \'' + expected + '\', but received \'' + token.get_attribute() + '\' on line ' + str(pos[0] + 1))
+            """ while(token not in follow):
+                self.cursor.forward()
+                token = self.get_token()
+                if (token == None):
+                    print('End of file')
+                    exit() """
         else:
-            print('Synthatic Error: at the end of file expected \'' + expected + '\', but there are no more tokens.')
+            print('SyntaxError: at the end of file expected \'' + expected + '\', but there are no more tokens.')
             exit()
 
     @dispatch(Tokens)
@@ -295,9 +425,15 @@ class Parser():
         token = self.get_token()
         if (token != None):
             pos = token.get_pos()
-            print('Synthatic Error: expected ' + expected.value + ', but received \'' + token.get_attribute() + '\' on line ' + str(pos[0] + 1))
+            print('SyntaxError: expected ' + expected.value + ', but received \'' + token.get_attribute() + '\' on line ' + str(pos[0] + 1))
+            """ while(token not in follow):
+                self.cursor.forward()
+                token = self.get_token()
+                if (token == None):
+                    print('End of file')
+                    exit() """
         else:
-            print('Synthatic Error: at the end of file expected \'' + expected + '\', but there are no more tokens.')
+            print('SyntaxError: at the end of file expected \'' + expected + '\', but there are no more tokens.')
             exit()   
 
     @dispatch(Firsts)
@@ -305,9 +441,15 @@ class Parser():
         token = self.get_token()
         if (token != None):
             pos = token.get_pos()
-            print('Synthatic Error: expected ' + str(expected.value) + ', but received \'' + token.get_attribute() + '\' on line ' + str(pos[0] + 1))
+            print('SyntaxError: expected ' + str(expected.value) + ', but received \'' + token.get_attribute() + '\' on line ' + str(pos[0] + 1))
+            """ while(token not in follow):
+                self.cursor.forward()
+                token = self.get_token()
+                if (token == None):
+                    print('End of file')
+                    exit() """
         else:
-            print('Synthatic Error: at the end of file expected \'' + expected + '\', but there are no more tokens.')
+            print('SyntaxError: at the end of file expected \'' + expected + '\', but there are no more tokens.')
             exit()        
 
     def get_token(self):

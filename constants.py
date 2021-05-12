@@ -42,3 +42,18 @@ class Errors(Enum):
     MF_COMMENT = 'CoMF'
     MF_OPERATOR = 'OpMF'
     MF_STRING = 'CMF'
+
+
+class Firsts(Enum):
+    DECLS = ['function', 'procedure']
+    PARAM_TYPE = ['int', 'real', 'boolean', 'string', 'struct', 'IDE']
+    STRUCT_BLOCK = ['struct', 'typedef']
+    VAR_DECLS = ['int', 'real', 'boolean', 'string', 'struct', 'typedef','IDE']
+    CONST_DECLS = ['int', 'real', 'boolean','string', 'struct', 'typedef', 'IDE']
+    TYPE = ['int', 'real', 'boolean', 'string', 'struct']
+    VAR_LIST = [',', '=', ';']
+    CONST_LIST = [',', ';']
+    DECL_ATRIBUTE = ['{'] # incomplete
+
+class Follows(Enum):
+    START_BLOCK = ['function', 'procedure']    
