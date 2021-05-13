@@ -144,7 +144,7 @@ class Parser():
             else:
                 self.handle_error(Tokens.IDENTIFIER)       
         elif (self.consume(';')):
-            pass
+            pass                                    
 
     # <Var Block>
     def var_block(self):
@@ -241,11 +241,62 @@ class Parser():
         if (self.consume('[')):
             self.arrays()
 
+    # <Assign>
+    def assign(self):
+        if (self.consume('=')):
+            if(self.check_firsts(Firsts.EXPR)):
+                self.expr()
+                if(not self.consume(';')):
+                    self.handle_error(';')
+            else:
+                self.handle_error(Firsts.EXPR)
+        elif(self.consume('++')):
+            if(not self.consume(';')):
+                self.handle_error(';')            
+        elif(self.consume('--')):
+            if(not self.consume(';')):
+                self.handle_error(';')  
+
+    # <Accesses>
+    def accesses(self):
+        self.access()
+        if (self.consume('.')):
+            self.accesses()
+
+    # <Access>
+    def access(self):
+        if(self.consume(Tokens.IDENTIFIER)):
+            if (self.consume('[')):
+                self.arrays()
+        else:
+            self.handle_error(Tokens.IDENTIFIER)
+
+    # <Args>
+    def args(self):
+        if (self.check_firsts(Firsts.EXPR)):
+            if(self.consume(',')):
+                self.args_list()    
+
+    # <Args List>
+    def args_list(self):
+        if (self.check_firsts(Firsts.EXPR)):
+            self.expr()
+            if(self.consume(',')):
+                self.args_list()         
+        else:
+            self.handle_error(Firsts.EXPR)
+
     # <Array>
     def array(self):
-        # <Index>
+        if (self.check_firsts(Firsts.INDEX)):
+            self.index()
         if (not self.consume(']')):
             self.handle_error(']')    
+
+    # <Index>
+    def index(self):
+        if (self.check_firsts(Firsts.EXPR)):
+            self.expr()
 
     # <Start Block>
     def start_block(self):
@@ -391,11 +442,98 @@ class Parser():
         if (self.consume('{')):
             if (self.consume('var')):
                 self.var_block()
-            #funcstms
+            if (self.check_firsts(Firsts.FUNC_STM)):
+                self.func_stms()
             if (not self.consume('}')):
                 self.handle_error('}')    
         else:
             self.handle_error('{')
+
+    # <Func Stms>
+    def func_stms(self):
+        self.func_stm()
+        if (self.check_firsts(Firsts.FUNC_STM)):
+            self.func_stms()
+
+    # <Func Stm>
+    def func_stm(self):
+        if (self.consume('if')):
+            if(self.consume('(')):
+                if (self.check_firsts(Firsts.LOG_EXPR)):
+                    self.log_expr(self)
+                    if(self.consume(')')):
+                        if(self.consume('then')):
+                            if (self.check_firsts(Firsts.FUNC_NORMAL_STM)):
+                                self.func_normal_stm()
+                                if (self.consume('else')):
+                                    self.else_stm()
+                            else:
+                                self.handle_error(Firsts.FUNC_NORMAL_STM)        
+                        else:
+                            self.handle_error('then')        
+                    else:
+                        self.handle_error(')')    
+                else:
+                    self.handle_error(Firsts.LOG_EXPR)        
+        elif (self.consume('while')):
+            if(self.consume('(')):
+                if (self.check_firsts(Firsts.LOG_EXPR)):
+                    self.log_expr()
+                    if(self.consume(')')):
+                        if(self.check_firsts(Firsts.FUNC_STM)):
+                            self.func_stm()
+                    else:
+                        self.handle_error(')')    
+                else:
+                    self.handle_error(Firsts.LOG_EXPR)    
+        elif (self.check_firsts(Firsts.FUNC_NORMAL_STM)):
+            self.func_normal_stm();
+   
+    # <Log Expr>
+    def log_expr(self):
+        print ('log expr')
+
+    # <Func Normal Stm>
+    def func_normal_stm(self):
+        if (self.consume('{')):
+            if(self.check_firsts(Firsts.FUNC_STM)):
+                self.func_stms()
+            if (not self.consume('}')):
+                self.handle_error('}')    
+        elif(self.check_firsts(Firsts.VAR_STM)):
+            self.var_stm()    
+        elif(self.consume('return')):
+            if (self.check_firsts(Firsts.EXPR)):
+                self.expr()
+                if (not self.consume(';')):
+                    self.handle_error(';')  
+            else:
+                self.handle_error(Firsts.EXPR)     
+        elif(self.consume(';')):
+            pass
+
+    # <Else Stm>
+    def else_stm(self):
+        if (self.check_firsts(Firsts.FUNC_NORMAL_STM)):
+            self.func_normal_stm()
+        else:
+            self.handle_error(Firsts.FUNC_NORMAL_STM)
+
+    # <Var Stm>
+    def var_stm(self):
+        print ('var stm')
+
+    # <Stm Id>
+    def stm_id(self):
+        print ('stm id')
+
+    # <Stm Scope>
+    def stm_scope(self):
+        print ('stm scope')
+
+    # <Stm Cmd>
+    def stm_cmd(self):
+        print ('stm cmd')        
 
     def check_firsts(self,firsts):
         token = self.get_token()
