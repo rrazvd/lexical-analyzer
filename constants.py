@@ -48,7 +48,7 @@ class Errors(Enum):
     MF_COMMENT = 'CoMF'
     MF_OPERATOR = 'OpMF'
     MF_STRING = 'CMF'
-
+    SYNTAX_ERROR = 'ERRO SINTÁTICO'
 
 class Firsts(Enum):
     DECLS = ['function', 'procedure']

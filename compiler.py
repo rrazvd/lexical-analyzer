@@ -19,5 +19,8 @@ class Compiler():
     def get_symbol_table(self):
         return self.symbol_table
 
-    def get_tokens(self):
+    def get_tokens_lexer(self):
         return self.lexical_analyzer.get_tokens()
+
+    def get_tokens_parser(self):
+        return self.parser.get_tokens_parser()

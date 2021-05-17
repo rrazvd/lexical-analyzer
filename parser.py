@@ -1,6 +1,7 @@
 from cursor import Cursor
-from constants import Tokens, Firsts, Follows
+from constants import Tokens, Firsts, Follows, Errors
 from multipledispatch import dispatch
+from token2 import Token
 
 """
 This Class implements a syntactic analyzer.
@@ -437,8 +438,6 @@ class Parser():
         else:
             self.handle_error(Tokens.NUMBER)
 
- #----------------------------------------------------------------------#
-
     # <Func Block>
     def func_block(self):
         if (self.consume('{')):
@@ -524,8 +523,6 @@ class Parser():
                     self.handle_error(')')
             else:
                 self.handle_error(Firsts.LOG_EXPR)
-
-    #----------------------------------------------------------------------#
 
     # <Var Stm>
     def var_stm(self):
@@ -997,6 +994,8 @@ class Parser():
         token = self.get_token()
         if (token != None):
             pos = token.get_pos()
+            token_error = Token(Errors.SYNTAX_ERROR, 'ESPERAVA: ' + expected, pos)
+            self.parser_tokens.append(token_error)
             print('SyntaxError: expected \'' + expected + '\', but received \'' +
                   token.get_attribute() + '\' on line ' + str(pos[0] + 1))
             """ while(token not in follow):
@@ -1008,13 +1007,15 @@ class Parser():
         else:
             print('SyntaxError: at the end of file expected \'' +
                   expected + '\', but there are no more tokens.')
-            exit()
+            return #exit()
 
     @ dispatch(Tokens)
     def handle_error(self, expected):
         token = self.get_token()
         if (token != None):
             pos = token.get_pos()
+            token_error = Token(Errors.SYNTAX_ERROR, 'ESPERAVA: ' + expected.value, pos)
+            self.parser_tokens.append(token_error)
             print('SyntaxError: expected ' + expected.value + ', but received \'' +
                   token.get_attribute() + '\' on line ' + str(pos[0] + 1))
             """ while(token not in follow):
@@ -1026,13 +1027,15 @@ class Parser():
         else:
             print('SyntaxError: at the end of file expected \'' +
                   expected + '\', but there are no more tokens.')
-            exit()
+            return #exit()
 
     @ dispatch(Firsts)
     def handle_error(self, expected):
         token = self.get_token()
         if (token != None):
             pos = token.get_pos()
+            token_error = Token(Errors.SYNTAX_ERROR, 'ESPERAVA: ' + str(expected.value), pos)
+            self.parser_tokens.append(token_error)
             print('SyntaxError: expected ' + str(expected.value) + ', but received \'' +
                   token.get_attribute() + '\' on line ' + str(pos[0] + 1))
             """ while(token not in follow):
@@ -1044,7 +1047,7 @@ class Parser():
         else:
             print('SyntaxError: at the end of file expected \'' +
                   expected + '\', but there are no more tokens.')
-            exit()
+            return #exit()
 
     def get_token(self):
         pos = self.cursor.get_position()
@@ -1052,5 +1055,5 @@ class Parser():
             return self.tokens[pos]
         return None
 
-    def get_parser_tokens(self):
+    def get_tokens_parser(self):
         return self.parser_tokens
