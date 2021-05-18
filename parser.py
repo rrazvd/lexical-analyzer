@@ -30,7 +30,7 @@ class Parser():
         if (self.consume('procedure')):  # <Start Block>
             self.start_block()
         else:
-            self.handle_error('procedure')  # , Follows.START_BLOCK)
+            self.handle_errorf('procedure', Follows.START_BLOCK)  # , Follows.START_BLOCK)
 
         if (self.check_firsts(Firsts.DECLS)):  # <Decls>
             self.decls()
@@ -51,11 +51,11 @@ class Parser():
                     if(self.consume('var')):
                         self.var_block()
                     if(not self.consume('}')):
-                        self.handle_error('}')
+                        self.handle_errorf('}', Follows.STRUCT_BLOCK)
                 else:
-                    self.handle_error('{')
+                    self.handle_errorf('{', Follows.STRUCT_BLOCK)
             else:
-                self.handle_error(Tokens.IDENTIFIER)
+                self.handle_errorf(Tokens.IDENTIFIER, Follows.STRUCT_BLOCK)
         elif(self.consume('typedef')):
             if(self.consume('struct')):
                 if(self.consume('extends')):
@@ -66,20 +66,20 @@ class Parser():
                     if(self.consume('}')):
                         if (self.consume(Tokens.IDENTIFIER)):
                             if (not self.consume(';')):
-                                self.handle_error(';')
+                                self.handle_errorf(';', Follows.STRUCT_BLOCK)
                         else:
-                            self.handle_error(Tokens.IDENTIFIER)
+                            self.handle_errorf(Tokens.IDENTIFIER, Follows.STRUCT_BLOCK)
                     else:
-                        self.handle_error('}')
+                        self.handle_errorf('}', Follows.STRUCT_BLOCK)
                 else:
-                    self.handle_error('{')
+                    self.handle_errorf('{', Follows.STRUCT_BLOCK)
             else:
-                self.handle_error('struct')
+                self.handle_errorf('struct', Follows.STRUCT_BLOCK)
 
     # <Extends>
     def extends(self):
         if (not self.consume(Tokens.IDENTIFIER)):
-            self.handle_error(Tokens.IDENTIFIER)
+            self.handle_errorf(Tokens.IDENTIFIER, Follows.EXTENDS)
 
     # <Const Block>
     def const_block(self):
@@ -88,9 +88,9 @@ class Parser():
                 self.const_decls()
 
             if (not self.consume('}')):
-                self.handle_error('}')
+                self.handle_errorf('}', Follows.CONST_BLOCK)
         else:
-            self.handle_error('{')
+            self.handle_errorf('{', Follows.CONST_BLOCK)
 
     # <Const Decls>
     def const_decls(self):
@@ -107,9 +107,9 @@ class Parser():
                 if (self.check_firsts(Firsts.CONST_LIST)):
                     self.const_list()
                 else:
-                    self.handle_error(Firsts.CONST_LIST)
+                    self.handle_errorf(Firsts.CONST_LIST, Follows.CONST_DECL)
             else:
-                self.handle_error(Tokens.IDENTIFIER)
+                self.handle_errorf(Tokens.IDENTIFIER, Follows.CONST_DECL)
         elif (self.consume('typedef')):
             self.type_def()
         elif (self.consume(Tokens.IDENTIFIER)):
@@ -118,9 +118,9 @@ class Parser():
                 if (self.check_firsts(Firsts.CONST_LIST)):
                     self.const_list()
                 else:
-                    self.handle_error(Firsts.CONST_LIST)
+                    self.handle_errorf(Firsts.CONST_LIST, Follows.CONST_DECL)
             else:
-                self.handle_error(Tokens.IDENTIFIER)
+                self.handle_errorf(Tokens.IDENTIFIER, Follows.CONST_DECL)
 
     # <Const>
     def const(self):
@@ -131,9 +131,9 @@ class Parser():
             if (self.check_firsts(Firsts.DECL_ATRIBUTE)):
                 self.decl_atribute()
             else:
-                self.handle_error(Firsts.DECL_ATRIBUTE)
+                self.handle_errorf(Firsts.DECL_ATRIBUTE, Follows.CONST)
         else:
-            self.handle_error('=')
+            self.handle_errorf('=', Follows.CONST)
 
     # <Const List>
     def const_list(self):
@@ -143,9 +143,9 @@ class Parser():
                 if (self.check_firsts(Firsts.CONST_LIST)):
                     self.const_list()
                 else:
-                    self.handle_error(Firsts.CONST_LIST)
+                    self.handle_errorf(Firsts.CONST_LIST, Follows.CONST_LIST)
             else:
-                self.handle_error(Tokens.IDENTIFIER)
+                self.handle_errorf(Tokens.IDENTIFIER, Follows.CONST_LIST)
         elif (self.consume(';')):
             pass
 
@@ -156,9 +156,9 @@ class Parser():
                 self.var_decls()
 
             if (not self.consume('}')):
-                self.handle_error('}')
+                self.handle_errorf('}', Follows.VAR_BLOCK)
         else:
-            self.handle_error('{')
+            self.handle_errorf('{', Follows.VAR_BLOCK)
 
     # <Var Decls>
     def var_decls(self):
@@ -175,9 +175,9 @@ class Parser():
                 if (self.check_firsts(Firsts.VAR_LIST)):
                     self.var_list()
                 else:
-                    self.handle_error(Firsts.VAR_LIST)
+                    self.handle_errorf(Firsts.VAR_LIST, Follows.VAR_DECL)
             else:
-                self.handle_error(Tokens.IDENTIFIER)
+                self.handle_errorf(Tokens.IDENTIFIER, Follows.VAR_DECL)
         elif (self.consume('typedef')):
             self.type_def()
         elif (self.consume(Tokens.IDENTIFIER)):
@@ -186,15 +186,15 @@ class Parser():
                 if (self.check_firsts(Firsts.VAR_LIST)):
                     self.var_list()
                 else:
-                    self.handle_error(Firsts.VAR_LIST)
+                    self.handle_errorf(Firsts.VAR_LIST, Follows.VAR_DECL)
             else:
-                self.handle_error(Tokens.IDENTIFIER)
+                self.handle_errorf(Tokens.IDENTIFIER, Follows.VAR_DECL)
 
     # <Type>
     def _type(self):
         if (self.consume('struct')):
             if (not self.consume(Tokens.IDENTIFIER)):
-                self.handle_error(Tokens.IDENTIFIER)
+                self.handle_errorf(Tokens.IDENTIFIER, Follows.TYPE)
         else:
             self.consume(Firsts.TYPE)
 
@@ -204,11 +204,11 @@ class Parser():
             self._type()
             if (self.consume(Tokens.IDENTIFIER)):
                 if (not self.consume(';')):
-                    self.handle_error(';')
+                    self.handle_errorf(';', Follows.TYPEDEF)
             else:
-                self.handle_error(Tokens.IDENTIFIER)
+                self.handle_errorf(Tokens.IDENTIFIER, Follows.TYPEDEF)
         else:
-            self.handle_error(Firsts.TYPE)
+            self.handle_errorf(Firsts.TYPE, Follows.TYPEDEF)
 
     # <Var>
     def var(self):
@@ -223,18 +223,18 @@ class Parser():
                 if (self.check_firsts(Firsts.VAR_LIST)):
                     self.var_list()
                 else:
-                    self.handle_error(Firsts.VAR_LIST)
+                    self.handle_errorf(Firsts.VAR_LIST, Follows.VAR_LIST)
             else:
-                self.handle_error(Tokens.IDENTIFIER)
+                self.handle_errorf(Tokens.IDENTIFIER, Follows.VAR_LIST)
         elif (self.consume('=')):
             if (self.check_firsts(Firsts.DECL_ATRIBUTE)):
                 self.decl_atribute()
                 if (self.check_firsts(Firsts.VAR_LIST)):
                     self.var_list()
                 else:
-                    self.handle_error(Firsts.VAR_LIST)
+                    self.handle_errorf(Firsts.VAR_LIST, Follows.VAR_LIST)
             else:
-                self.handle_error(Firsts.DECL_ATRIBUTE)
+                self.handle_errorf(Firsts.DECL_ATRIBUTE, Follows.VAR_LIST)
         elif (self.consume(';')):
             pass
 
@@ -250,15 +250,15 @@ class Parser():
             if(self.check_firsts(Firsts.EXPR)):
                 self.expr()
                 if(not self.consume(';')):
-                    self.handle_error(';')
+                    self.handle_errorf(';', Follows.ASSIGN)
             else:
-                self.handle_error(Firsts.EXPR)
+                self.handle_errorf(Firsts.EXPR, Follows.ASSIGN)
         elif(self.consume('++')):
             if(not self.consume(';')):
-                self.handle_error(';')
+                self.handle_errorf(';', Follows.ASSIGN)
         elif(self.consume('--')):
             if(not self.consume(';')):
-                self.handle_error(';')
+                self.handle_errorf(';', Follows.ASSIGN)
 
     # <Accesses>
     def accesses(self):
@@ -272,7 +272,7 @@ class Parser():
             if (self.consume('[')):
                 self.arrays()
         else:
-            self.handle_error(Tokens.IDENTIFIER)
+            self.handle_errorf(Tokens.IDENTIFIER, Follows.ACCESS)
 
     # <Args>
     def args(self):
@@ -288,14 +288,14 @@ class Parser():
             if(self.consume(',')):
                 self.args_list()
         else:
-            self.handle_error(Firsts.EXPR)
+            self.handle_errorf(Firsts.EXPR, Follows.ARGS_LIST)
 
     # <Array>
     def array(self):
         if (self.check_firsts(Firsts.INDEX)):
             self.index()
         if (not self.consume(']')):
-            self.handle_error(']')
+            self.handle_errorf(']', Follows.ARRAY)
 
     # <Index>
     def index(self):
@@ -309,7 +309,7 @@ class Parser():
         if(self.consume('start')):
             self.func_block()
         else:
-            self.handle_error('start')
+            self.handle_errorf('start', Follows.START_BLOCK)
 
     # <Decls>
     def decls(self):
@@ -336,9 +336,9 @@ class Parser():
         if (self.check_firsts(Firsts.ARRAY_DEF)):
             self.array_def()
             if (not self.consume('}')):
-                self.handle_error('}')
+                self.handle_errorf('}', Follows.ARRAY_DECL)
         else:
-            self.handle_error(Firsts.ARRAY_DEF)
+            self.handle_errorf(Firsts.ARRAY_DEF, Follows.ARRAY_DECL)
 
     # <Array Def>
     def array_def(self):
@@ -352,7 +352,7 @@ class Parser():
         if (self.check_firsts(Firsts.ARRAY_DEF)):
             self.array_def()
         else:
-            self.handle_error(Firsts.ARRAY_DEF)
+            self.handle_errorf(Firsts.ARRAY_DEF, Follows.ARRAY_EXPR)
 
     # <Func decls>
     def func_decl(self):
@@ -365,13 +365,13 @@ class Parser():
                     if(self.consume(')')):
                         self.func_block()
                     else:
-                        self.handle_error(')')
+                        self.handle_errorf(')', Follows.FUNC_DECL)
                 else:
-                    self.handle_error('(')
+                    self.handle_errorf('(', Follows.FUNC_DECL)
             else:
-                self.handle_error(Tokens.IDENTIFIER)
+                self.handle_errorf(Tokens.IDENTIFIER, Follows.FUNC_DECL)
         else:
-            self.handle_error(Firsts.PARAM_TYPE)
+            self.handle_errorf(Firsts.PARAM_TYPE, Follows.FUNC_DECL)
 
     # <Proc Decl>
     def proc_decl(self):
@@ -382,11 +382,11 @@ class Parser():
                 if(self.consume(')')):
                     self.func_block()
                 else:
-                    self.handle_error(')')
+                    self.handle_errorf(')', Follows.PROC_DECL)
             else:
-                self.handle_error('(')
+                self.handle_errorf('(', Follows.PROC_DECL)
         else:
-            self.handle_error(Tokens.IDENTIFIER)
+            self.handle_errorf(Tokens.IDENTIFIER, Follows.PROC_DECL)
 
     # <Params>
     def params(self):
@@ -401,7 +401,7 @@ class Parser():
             if (self.consume('[')):
                 self.param_arrays()
         else:
-            self.handle_error(Tokens.IDENTIFIER)
+            self.handle_errorf(Tokens.IDENTIFIER, Follows.PARAM)
 
     # <Params list>
     def params_list(self):
@@ -410,7 +410,7 @@ class Parser():
             if (self.consume(',')):
                 self.params_list()
         else:
-            self.handle_error(Firsts.PARAM_TYPE)
+            self.handle_errorf(Firsts.PARAM_TYPE, Follows.PARAMS_LIST)
 
     # <Param Type>
     def param_type(self):
@@ -425,7 +425,7 @@ class Parser():
             if (self.consume('[')):
                 self.param_mult_arrays()
         else:
-            self.handle_error(']')
+            self.handle_errorf(']', Follows.PARAMS_ARRAYS)
 
     # <Param Mult Arrays>
     def param_mult_arrays(self):
@@ -434,9 +434,9 @@ class Parser():
                 if (self.consume('[')):
                     self.param_mult_arrays()
             else:
-                self.handle_error(']')
+                self.handle_errorf(']', Follows.PARAM_MULT_ARRAYS)
         else:
-            self.handle_error(Tokens.NUMBER)
+            self.handle_errorf(Tokens.NUMBER, Follows.PARAM_MULT_ARRAYS)
 
     # <Func Block>
     def func_block(self):
@@ -446,9 +446,9 @@ class Parser():
             if (self.check_firsts(Firsts.FUNC_STMS)):
                 self.func_stms()
             if (not self.consume('}')):
-                self.handle_error('}')
+                self.handle_errorf('}', Follows.FUNC_BLOCK)
         else:
-            self.handle_error('{')
+            self.handle_errorf('{', Follows.FUNC_BLOCK)
 
     # <Func Stms>
     def func_stms(self):
@@ -468,9 +468,9 @@ class Parser():
             if (self.check_firsts(Firsts.EXPR)):
                 self.expr()
                 if (not self.consume(';')):
-                    self.handle_error(';')
+                    self.handle_errorf(';', Follows.FUNC_STM)
             else:
-                self.handle_error(Firsts.EXPR)
+                self.handle_errorf(Firsts.EXPR, Follows.FUNC_STM)
 
     # <Else Stm>
     def else_stm(self):
@@ -478,9 +478,9 @@ class Parser():
             if (self.check_firsts(Firsts.FUNC_STMS)):
                 self.func_stms()
             if (not self.consume('}')):
-                self.handle_error('}')
+                self.handle_errorf('}', Follows.ELSE_STM)
         else:
-            self.handle_error('{')
+            self.handle_errorf('{', Follows.ELSE_STM)
 
     # <If Stm>
     def if_stm(self):
@@ -496,15 +496,15 @@ class Parser():
                                 if (self.consume('else')):
                                     self.else_stm()
                             else:
-                                self.handle_error('}')
+                                self.handle_errorf('}', Follows.IF_STM)
                         else:
-                            self.handle_error('{')
+                            self.handle_errorf('{', Follows.IF_STM)
                     else:
-                        self.handle_error('then')
+                        self.handle_errorf('then', Follows.IF_STM)
                 else:
-                    self.handle_error(')')
+                    self.handle_errorf(')', Follows.IF_STM)
             else:
-                self.handle_error(Firsts.LOG_EXPR)
+                self.handle_errorf(Firsts.LOG_EXPR, Follows.IF_STM)
 
     # <While Stm>
     def while_stm(self):
@@ -516,13 +516,13 @@ class Parser():
                         if (self.check_firsts(Firsts.FUNC_STMS)):
                             self.func_stms()
                         if(not self.consume('}')):
-                            self.handle_error('}')
+                            self.handle_errorf('}', Follows.WHILE_STM)
                     else:
-                        self.handle_error('{')
+                        self.handle_errorf('{', Follows.WHILE_STM)
                 else:
-                    self.handle_error(')')
+                    self.handle_errorf(')', Follows.WHILE_STM)
             else:
-                self.handle_error(Firsts.LOG_EXPR)
+                self.handle_errorf(Firsts.LOG_EXPR, Follows.WHILE_STM)
 
     # <Var Stm>
     def var_stm(self):
@@ -532,7 +532,7 @@ class Parser():
             if(self.check_firsts(Firsts.STM_ID)):
                 self.stm_id()
             else:
-                self.handle_error(Firsts.STM_ID)
+                self.handle_errorf(Firsts.STM_ID, Follows.VAR_STM)
         elif(self.check_firsts(Firsts.STM_CMD)):
             self.stm_cmd()
 
@@ -549,7 +549,7 @@ class Parser():
             if(self.check_firsts(Firsts.ASSIGN)):
                 self.assign()
             else:
-                self.handle_error(Firsts.ASSIGN)
+                self.handle_errorf(Firsts.ASSIGN, Follows.STM_ID)
         elif(self.consume('.')):
             self.access()
             if (self.consume('.')):
@@ -557,15 +557,15 @@ class Parser():
             if(self.check_firsts(Firsts.ASSIGN)):
                 self.assign()
             else:
-                self.handle_error(Firsts.ASSIGN)
+                self.handle_errorf(Firsts.ASSIGN, Follows.STM_ID)
         elif(self.consume('(')):
             if(self.check_firsts(Firsts.ARGS)):
                 self.args()
             if (self.consume(')')):
                 if(not self.consume(';')):
-                    self.handle_error(';')
+                    self.handle_errorf(';', Follows.STM_ID)
             else:
-                self.handle_error(')')
+                self.handle_errorf(')', Follows.STM_ID)
 
     # <Stm Scope>
     def stm_scope(self):
@@ -577,9 +577,9 @@ class Parser():
                 if(self.check_firsts(Firsts.ASSIGN)):
                     self.assign()
                 else:
-                    self.handle_error(Firsts.ASSIGN)
+                    self.handle_errorf(Firsts.ASSIGN, Follows.STM_SCOPE)
             else:
-                self.handle_error('.')
+                self.handle_errorf('.', Follows.STM_SCOPE)
         elif(self.consume('global')):
             if(self.consume('.')):
                 self.access()
@@ -588,9 +588,9 @@ class Parser():
                 if(self.check_firsts(Firsts.ASSIGN)):
                     self.assign()
                 else:
-                    self.handle_error(Firsts.ASSIGN)
+                    self.handle_errorf(Firsts.ASSIGN, Follows.STM_SCOPE)
             else:
-                self.handle_error('.')
+                self.handle_errorf('.', Follows.STM_SCOPE)
 
     # <Stm Cmd>
     def stm_cmd(self):
@@ -600,22 +600,22 @@ class Parser():
                     self.args()
                 if(self.consume(')')):
                     if(not self.consume(';')):
-                        self.handle_error(';')
+                        self.handle_errorf(';', Follows.STM_CMD)
                 else:
-                    self.handle_error(')')
+                    self.handle_errorf(')', Follows.STM_CMD)
             else:
-                self.handle_error('(')
+                self.handle_errorf('(', Follows.STM_CMD)
         elif(self.consume('read')):
             if(self.consume('(')):
                 if(self.check_firsts(Firsts.ARGS)):
                     self.args()
                 if(self.consume(')')):
                     if(not self.consume(';')):
-                        self.handle_error(';')
+                        self.handle_errorf(';', Follows.STM_CMD)
                 else:
-                    self.handle_error(')')
+                    self.handle_errorf(')', Follows.STM_CMD)
             else:
-                self.handle_error('(')
+                self.handle_errorf('(', Follows.STM_CMD)
 
     # <Expr>
     def expr(self):
@@ -629,12 +629,10 @@ class Parser():
 
     # <Or_>
     def _or_(self):
-        if self.check_firsts(Firsts.EXPR):
-            self._and()
-            if (self.consume('||')):
-                self._or_()
-        else:
-            self.handle_error(Firsts.EXPR)
+        self._and()
+        if (self.consume('||')):
+            self._or_()
+
 
     # <And>
     def _and(self):
@@ -644,118 +642,71 @@ class Parser():
 
     # <And_>
     def _and_(self):
-        if self.check_firsts(Firsts.EXPR):
-            self.equate()
-            if (self.consume('&&')):
-                self._and_()
-        else:
-            self.handle_error(Firsts.EXPR)
+        self.equate()
+        if (self.consume('&&')):
+            self._and_()
 
     # <Equate>
     def equate(self):
         self.compare()
-        if(self.check_firsts(Firsts.EQUATE_)):
-            self.equate_()
+        self.equate_()
 
     # <Equate_>
     def equate_(self):
         if(self.consume('==')):
-            if self.check_firsts(Firsts.EXPR):
-                self.compare()
-                if(self.check_firsts(Firsts.EQUATE_)):
-                    self.equate_()
-            else:
-                self.handle_error(Firsts.EXPR)
+            self.compare()
+            self.equate_()
         elif (self.consume('!=')):
-            if self.check_firsts(Firsts.EXPR):
-                self.compare()
-                if(self.check_firsts(Firsts.EQUATE_)):
-                    self.equate_()
-            else:
-                self.handle_error(Firsts.EXPR)
+            self.compare()
+            self.equate_()
 
     # <Compare>
     def compare(self):
         self.add()
-        if(self.check_firsts(Firsts.COMPARE_)):
-            self.compare_()
+        self.compare_()
 
     # <Compare_>
     def compare_(self):
         if(self.consume('<')):
-            if self.check_firsts(Firsts.EXPR):
-                self.add()
-                if(self.check_firsts(Firsts.COMPARE_)):
-                    self.compare_()
-            else:
-                self.handle_error(Firsts.EXPR)
+            self.add()
+            self.compare_()
         elif (self.consume('>')):
-            if self.check_firsts(Firsts.EXPR):
-                self.add()
-                if(self.check_firsts(Firsts.COMPARE_)):
-                    self.compare_()
-            else:
-                self.handle_error(Firsts.EXPR)
+            self.add()
+            self.compare_()
         elif (self.consume('<=')):
-            if self.check_firsts(Firsts.EXPR):
-                self.add()
-                if(self.check_firsts(Firsts.COMPARE_)):
-                    self.compare_()
-            else:
-                self.handle_error(Firsts.EXPR)
+            self.add()
+            self.compare_()
         elif (self.consume('>=')):
-            if self.check_firsts(Firsts.EXPR):
-                self.add()
-                if(self.check_firsts(Firsts.COMPARE_)):
-                    self.compare_()
-            else:
-                self.handle_error(Firsts.EXPR)
+            self.add()
+            self.compare_()
 
     # <Add>
     def add(self):
         self.mult()
-        if(self.check_firsts(Firsts.ADD_)):
-            self.add_()
+        self.add_()
 
     # <Add_>
     def add_(self):
         if(self.consume('+')):
-            if self.check_firsts(Firsts.EXPR):
-                self.mult()
-                if(self.check_firsts(Firsts.ADD_)):
-                    self.add_()
-            else:
-                self.handle_error(Firsts.EXPR)
+            self.mult()
+            self.add_()
         elif (self.consume('-')):
-            if self.check_firsts(Firsts.EXPR):
-                self.mult()
-                if(self.check_firsts(Firsts.ADD_)):
-                    self.add_()
-            else:
-                self.handle_error(Firsts.EXPR)
+            self.mult()
+            self.add_()
 
     # <Mult>
     def mult(self):
         self.unary()
-        if(self.check_firsts(Firsts.MULT_)):
-            self.mult_()
+        self.mult_()
 
     # <Mult_>
     def mult_(self):
         if(self.consume('*')):
-            if self.check_firsts(Firsts.EXPR):
-                self.unary()
-                if(self.check_firsts(Firsts.MULT_)):
-                    self.mult_()
-            else:
-                self.handle_error(Firsts.EXPR)
+            self.unary()
+            self.mult_()
         elif (self.consume('/')):
-            if self.check_firsts(Firsts.EXPR):
-                self.unary()
-                if(self.check_firsts(Firsts.MULT_)):
-                    self.mult_()
-            else:
-                self.handle_error(Firsts.EXPR)
+            self.unary()
+            self.mult_()
 
     # <Unary>
     def unary(self):
@@ -770,7 +721,7 @@ class Parser():
             if (self.check_firsts(Firsts.VALUE)):
                 self.value()
             else:
-                self.handle_error(Firsts.VALUE)
+                self.handle_errorf(Firsts.VALUE, Follows.VALUE)
         elif (self.consume(Tokens.NUMBER)):
             pass
         elif(self.consume(Tokens.STRING)):
@@ -781,12 +732,16 @@ class Parser():
             if(self.consume('.')):
                 self.access()
             else:
-                self.handle_error('.')
+                self.handle_errorf('.', Follows.VALUE) 
+            if(self.consume('.')):
+                self.accesses()
         elif(self.consume('global')):
             if(self.consume('.')):
                 self.access()
             else:
-                self.handle_error('.')
+                self.handle_errorf('.', Follows.VALUE)
+            if(self.consume('.')):
+                self.accesses()    
         elif(self.consume(Tokens.IDENTIFIER)):
             if(self.check_firsts(Firsts.ID_VALUE)):
                 self.id_value()
@@ -794,9 +749,11 @@ class Parser():
             if(self.check_firsts(Firsts.EXPR)):
                 self.expr()
                 if(not self.consume(')')):
-                    self.handle_error(')')
+                    self.handle_errorf(')', Follows.VALUE)
             else:
-                self.handle_error(Firsts.EXPR)
+                self.handle_errorf(Firsts.EXPR, Follows.VALUE)
+        else:
+            self.handle_errorf(Firsts.EXPR, Follows.VALUE)
 
     # <Id Value>
     def id_value(self):
@@ -808,7 +765,7 @@ class Parser():
             if(self.check_firsts(Firsts.ARGS)):
                 self.args()
             if (not self.consume(')')):
-                self.handle_error(')')
+                self.handle_errorf(')', Follows.ID_VALUE)
 
     # <Log Expr>
     def log_expr(self):
@@ -822,12 +779,9 @@ class Parser():
 
     # <Log or_>
     def log_or_(self):
-        if self.check_firsts(Firsts.LOG_EXPR):
-            self.log_and()
-            if (self.consume('||')):
-                self.log_or_()
-        else:
-            self.handle_error(Firsts.LOG_EXPR)
+        self.log_and()
+        if (self.consume('||')):
+            self.log_or_()
 
     # <Log And>
     def log_and(self):
@@ -837,72 +791,43 @@ class Parser():
 
     # <Log And_>
     def log_and_(self):
-        if self.check_firsts(Firsts.LOG_EXPR):
-            self.log_equate()
-            if (self.consume('&&')):
-                self.log_and_()
-        else:
-            self.handle_error(Firsts.LOG_EXPR)
+        self.log_equate()
+        if (self.consume('&&')):
+            self.log_and_()
 
     # <Log Equate>
     def log_equate(self):
         self.log_compare()
-        if(self.check_firsts(Firsts.EQUATE_)):
-            self.log_equate_()
+        self.log_equate_()
 
     # <Log Equate_>
     def log_equate_(self):
         if(self.consume('==')):
-            if self.check_firsts(Firsts.LOG_EXPR):
-                self.log_compare()
-                if(self.check_firsts(Firsts.EQUATE_)):
-                    self.log_equate_()
-            else:
-                self.handle_error(Firsts.LOG_EXPR)
+            self.log_compare()
+            self.log_equate_()
         elif (self.consume('!=')):
-            if self.check_firsts(Firsts.LOG_EXPR):
-                self.log_compare()
-                if(self.check_firsts(Firsts.EQUATE_)):
-                    self.log_equate_()
-            else:
-                self.handle_error(Firsts.LOG_EXPR)
+            self.log_compare()
+            self.log_equate_()
 
     # <Log Compare>
     def log_compare(self):
         self.log_unary()
-        if(self.check_firsts(Firsts.COMPARE_)):
-            self.log_compare_()
+        self.log_compare_()
 
     # <Compare_>
     def log_compare_(self):
         if(self.consume('<')):
-            if self.check_firsts(Firsts.LOG_EXPR):
-                self.log_unary()
-                if(self.check_firsts(Firsts.COMPARE_)):
-                    self.log_compare_()
-            else:
-                self.handle_error(Firsts.LOG_EXPR)
+            self.log_unary()
+            self.log_compare_()
         elif (self.consume('>')):
-            if self.check_firsts(Firsts.LOG_EXPR):
-                self.log_unary()
-                if(self.check_firsts(Firsts.COMPARE_)):
-                    self.log_compare_()
-            else:
-                self.handle_error(Firsts.LOG_EXPR)
+            self.log_unary()
+            self.log_compare_()
         elif (self.consume('<=')):
-            if self.check_firsts(Firsts.LOG_EXPR):
-                self.log_unary()
-                if(self.check_firsts(Firsts.COMPARE_)):
-                    self.log_compare_()
-            else:
-                self.handle_error(Firsts.LOG_EXPR)
+            self.log_unary()
+            self.log_compare_()
         elif (self.consume('>=')):
-            if self.check_firsts(Firsts.LOG_EXPR):
-                self.log_unary()
-                if(self.check_firsts(Firsts.COMPARE_)):
-                    self.log_compare_()
-            else:
-                self.handle_error(Firsts.LOG_EXPR)
+            self.log_unary()
+            self.log_compare_()
 
     # <Log Unary>
     def log_unary(self):
@@ -923,12 +848,16 @@ class Parser():
             if(self.consume('.')):
                 self.access()
             else:
-                self.handle_error('.')
+                self.handle_errorf('.', Follows.LOG_VALUE)
+            if(self.consume('.')):
+                self.accesses()     
         elif(self.consume('global')):
             if(self.consume('.')):
                 self.access()
             else:
-                self.handle_error('.')
+                self.handle_errorf('.', Follows.LOG_VALUE)
+            if(self.consume('.')):
+                self.accesses()    
         elif(self.consume(Tokens.IDENTIFIER)):
             if(self.check_firsts(Firsts.ID_VALUE)):
                 self.id_value()
@@ -936,9 +865,11 @@ class Parser():
             if(self.check_firsts(Firsts.LOG_EXPR)):
                 self.log_expr()
                 if(not self.consume(')')):
-                    self.handle_error(')')
+                    self.handle_errorf(')', Follows.LOG_VALUE)
             else:
-                self.handle_error(Firsts.LOG_EXPR)
+                self.handle_errorf(Firsts.LOG_EXPR, Follows.LOG_VALUE)
+        else:
+            self.handle_errorf(Firsts.LOG_EXPR, Follows.LOG_VALUE)
 
     def check_firsts(self, firsts):
         token = self.get_token()
@@ -989,65 +920,37 @@ class Parser():
         else:
             return False
 
-    @ dispatch(str)
-    def handle_error(self, expected):
+    def handle_errorf(self, expected, follows):
         token = self.get_token()
         if (token != None):
             pos = token.get_pos()
-            token_error = Token(Errors.SYNTAX_ERROR, 'ESPERAVA: ' + expected, pos)
+            expected_str = ''
+            if (isinstance(expected, str)):
+                expected_str = expected
+            elif (isinstance(expected, Tokens)):
+                expected_str = expected.value
+            elif (isinstance(expected, Firsts)):
+                expected_str = str(expected.value)
+            
+            token_error = Token(Errors.SYNTAX_ERROR, 'ESPERAVA: ' + expected_str + ' MAS RECEBEU: ' + token.get_attribute(), pos)
+            print('SyntaxError: expected \'' + expected_str + '\', but received \'' +
+                    token.get_attribute() + '\' on line ' + str(pos[0] + 1))
+            
             self.parser_tokens.append(token_error)
-            print('SyntaxError: expected \'' + expected + '\', but received \'' +
-                  token.get_attribute() + '\' on line ' + str(pos[0] + 1))
-            """ while(token not in follow):
+            while(True):
+                if (token != None):
+                    if (token.get_attribute() in follows.value or token.get_name() in follows.value):
+                        return
+                else:
+                    return
                 self.cursor.forward()
                 token = self.get_token()
-                if (token == None):
-                    print('End of file')
-                    exit() """
+
         else:
             print('SyntaxError: at the end of file expected \'' +
                   expected + '\', but there are no more tokens.')
             return #exit()
 
-    @ dispatch(Tokens)
-    def handle_error(self, expected):
-        token = self.get_token()
-        if (token != None):
-            pos = token.get_pos()
-            token_error = Token(Errors.SYNTAX_ERROR, 'ESPERAVA: ' + expected.value, pos)
-            self.parser_tokens.append(token_error)
-            print('SyntaxError: expected ' + expected.value + ', but received \'' +
-                  token.get_attribute() + '\' on line ' + str(pos[0] + 1))
-            """ while(token not in follow):
-                self.cursor.forward()
-                token = self.get_token()
-                if (token == None):
-                    print('End of file')
-                    exit() """
-        else:
-            print('SyntaxError: at the end of file expected \'' +
-                  expected + '\', but there are no more tokens.')
-            return #exit()
-
-    @ dispatch(Firsts)
-    def handle_error(self, expected):
-        token = self.get_token()
-        if (token != None):
-            pos = token.get_pos()
-            token_error = Token(Errors.SYNTAX_ERROR, 'ESPERAVA: ' + str(expected.value), pos)
-            self.parser_tokens.append(token_error)
-            print('SyntaxError: expected ' + str(expected.value) + ', but received \'' +
-                  token.get_attribute() + '\' on line ' + str(pos[0] + 1))
-            """ while(token not in follow):
-                self.cursor.forward()
-                token = self.get_token()
-                if (token == None):
-                    print('End of file')
-                    exit() """
-        else:
-            print('SyntaxError: at the end of file expected \'' +
-                  expected + '\', but there are no more tokens.')
-            return #exit()
 
     def get_token(self):
         pos = self.cursor.get_position()
