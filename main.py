@@ -17,12 +17,12 @@ inputs = os.listdir('./input') # get list of input files from input folder
 for _input in inputs: # iterate each input file
     
     with open('./input/' + _input, 'r') as code: # open input file and store content in code var
-
-        c = Compiler(code.readlines())
-        tokens_parser = c.get_tokens_parser() # get tokens parser
             
         output_number = re.findall('\d+', _input)[0]
-
+        print ('-----------------------Output ' + output_number + '----------------------------')
+        
+        c = Compiler(code.readlines())
+        tokens_parser = c.get_tokens_parser() # get tokens parser
         hasError = False
         with open('./output/output' + output_number + '.txt', 'w') as wp:
             if tokens_parser:
@@ -33,3 +33,5 @@ for _input in inputs: # iterate each input file
                 wp.write("\n")
                 if (not hasError):
                     wp.write('Syntax analysis completed successfully')
+                    print('Syntax analysis completed successfully')
+                print ('-----------------------------------------------------------')    

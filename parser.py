@@ -30,7 +30,7 @@ class Parser():
         if (self.consume('procedure')):  # <Start Block>
             self.start_block()
         else:
-            self.handle_errorf('procedure', Follows.START_BLOCK)  # , Follows.START_BLOCK)
+            self.handle_errorf('procedure', Follows.START_BLOCK)
 
         if (self.check_firsts(Firsts.DECLS)):  # <Decls>
             self.decls()
@@ -949,7 +949,7 @@ class Parser():
         else:
             print('SyntaxError: at the end of file expected \'' +
                   expected + '\', but there are no more tokens.')
-            return #exit()
+            return
 
 
     def get_token(self):
