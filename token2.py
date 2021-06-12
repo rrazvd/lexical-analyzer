@@ -1,6 +1,8 @@
 """
 This class represents a Token.
 """
+
+
 class Token():
     def __init__(self, name, attribute, pos):
         self.name = name
@@ -8,10 +10,10 @@ class Token():
         self.__pos = pos
 
     def to_string(self):
-        return str(self.__pos[0] + 1) + ' ' + self.name.value + ' ' + str(self.__attribute)
+        return str(self.__pos[0] + 1) + ' ' + self.name + ' ' + str(self.__attribute)
 
     def get_name(self):
-        return self.name.value
+        return self.name
 
     def get_attribute(self):
         return self.__attribute

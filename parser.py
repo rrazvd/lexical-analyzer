@@ -10,9 +10,11 @@ This Class implements a syntactic analyzer.
 
 class Parser():
 
-    def __init__(self, tokens):
+    def __init__(self, tokens, semantic, symbol_table):
         self.tokens = tokens
         self.parser_tokens = []
+        self.semantic = semantic
+        self.symbol_table = symbol_table
         self.cursor = Cursor()  # create a cursor that will move inside the tokens list
         self.program()  # then the analyze begins
 
@@ -20,7 +22,7 @@ class Parser():
     def program(self):
         if (self.check_firsts(Firsts.STRUCT_BLOCK)):  # <Structs>
             self.structs()
-
+        self.semantic.set_scope('global')
         if (self.consume('const')):  # <Const Block>
             self.const_block()
 
@@ -28,6 +30,7 @@ class Parser():
             self.var_block()
 
         if (self.consume('procedure')):  # <Start Block>
+            self.semantic.set_scope('start')
             self.start_block()
         else:
             self.handle_errorf('procedure', Follows.START_BLOCK)
@@ -45,6 +48,8 @@ class Parser():
     def struct_block(self):
         if(self.consume('struct')):
             if (self.consume(Tokens.IDENTIFIER)):
+                token_id = self.get_previous_token(1)
+                self.semantic.set_scope(token_id.get_attribute())
                 if(self.consume('extends')):
                     self.extends()
                 if (self.consume('{')):
@@ -68,7 +73,8 @@ class Parser():
                             if (not self.consume(';')):
                                 self.handle_errorf(';', Follows.STRUCT_BLOCK)
                         else:
-                            self.handle_errorf(Tokens.IDENTIFIER, Follows.STRUCT_BLOCK)
+                            self.handle_errorf(
+                                Tokens.IDENTIFIER, Follows.STRUCT_BLOCK)
                     else:
                         self.handle_errorf('}', Follows.STRUCT_BLOCK)
                 else:
@@ -103,6 +109,10 @@ class Parser():
         if (self.check_firsts(Firsts.TYPE)):
             self._type()
             if (self.consume(Tokens.IDENTIFIER)):
+                token_type = self.get_previous_token(2)
+                token_identifier = self.get_previous_token(1)
+                self.semantic.add_const(token_type,
+                                        token_identifier)
                 self.const()
                 if (self.check_firsts(Firsts.CONST_LIST)):
                     self.const_list()
@@ -170,7 +180,11 @@ class Parser():
     def var_decl(self):
         if (self.check_firsts(Firsts.TYPE)):
             self._type()
-            if (self.consume(Tokens.IDENTIFIER)):
+            if (self.consume(Tokens.IDENTIFIER)):      # var id
+                token_type = self.get_previous_token(2)
+                token_identifier = self.get_previous_token(1)
+                self.semantic.add_var(token_type,
+                                      token_identifier)
                 self.var()
                 if (self.check_firsts(Firsts.VAR_LIST)):
                     self.var_list()
@@ -182,6 +196,10 @@ class Parser():
             self.type_def()
         elif (self.consume(Tokens.IDENTIFIER)):
             if (self.consume(Tokens.IDENTIFIER)):
+                token_type = self.get_previous_token(2)
+                token_identifier = self.get_previous_token(1)
+                self.semantic.add_var(token_type,
+                                      token_identifier)
                 self.var()
                 if (self.check_firsts(Firsts.VAR_LIST)):
                     self.var_list()
@@ -359,6 +377,8 @@ class Parser():
         if (self.check_firsts(Firsts.PARAM_TYPE)):
             self.param_type()
             if (self.consume(Tokens.IDENTIFIER)):
+                token_id = self.get_previous_token(1)
+                self.semantic.set_scope(token_id.get_attribute())
                 if(self.consume('(')):
                     if (self.check_firsts(Firsts.PARAM_TYPE)):
                         self.params()
@@ -376,6 +396,8 @@ class Parser():
     # <Proc Decl>
     def proc_decl(self):
         if (self.consume(Tokens.IDENTIFIER)):
+            token_id = self.get_previous_token(1)
+            self.semantic.set_scope(token_id.get_attribute())
             if(self.consume('(')):
                 if (self.check_firsts(Firsts.PARAM_TYPE)):
                     self.params()
@@ -633,7 +655,6 @@ class Parser():
         if (self.consume('||')):
             self._or_()
 
-
     # <And>
     def _and(self):
         self.equate()
@@ -732,7 +753,7 @@ class Parser():
             if(self.consume('.')):
                 self.access()
             else:
-                self.handle_errorf('.', Follows.VALUE) 
+                self.handle_errorf('.', Follows.VALUE)
             if(self.consume('.')):
                 self.accesses()
         elif(self.consume('global')):
@@ -741,7 +762,7 @@ class Parser():
             else:
                 self.handle_errorf('.', Follows.VALUE)
             if(self.consume('.')):
-                self.accesses()    
+                self.accesses()
         elif(self.consume(Tokens.IDENTIFIER)):
             if(self.check_firsts(Firsts.ID_VALUE)):
                 self.id_value()
@@ -850,14 +871,14 @@ class Parser():
             else:
                 self.handle_errorf('.', Follows.LOG_VALUE)
             if(self.consume('.')):
-                self.accesses()     
+                self.accesses()
         elif(self.consume('global')):
             if(self.consume('.')):
                 self.access()
             else:
                 self.handle_errorf('.', Follows.LOG_VALUE)
             if(self.consume('.')):
-                self.accesses()    
+                self.accesses()
         elif(self.consume(Tokens.IDENTIFIER)):
             if(self.check_firsts(Firsts.ID_VALUE)):
                 self.id_value()
@@ -887,6 +908,7 @@ class Parser():
         if (token != None):
             if (token.get_attribute() == terminal):
                 self.parser_tokens.append(token)
+                self.semantic.get_tokens().append(token)
                 self.cursor.forward()
                 return True
             else:
@@ -900,6 +922,7 @@ class Parser():
         if (token != None):
             if (token.get_name() == token_name.value):
                 self.parser_tokens.append(token)
+                self.semantic.get_tokens().append(token)
                 self.cursor.forward()
                 return True
             else:
@@ -913,6 +936,7 @@ class Parser():
         if (token != None):
             if (token.get_attribute() in firsts.value or token.get_name() in firsts.value):
                 self.parser_tokens.append(token)
+                self.semantic.get_tokens().append(token)
                 self.cursor.forward()
                 return True
             else:
@@ -931,11 +955,12 @@ class Parser():
                 expected_str = expected.value
             elif (isinstance(expected, Firsts)):
                 expected_str = str(expected.value)
-            
-            token_error = Token(Errors.SYNTAX_ERROR, 'ESPERAVA: ' + expected_str + ' MAS RECEBEU: ' + token.get_attribute(), pos)
+
+            token_error = Token(Errors.SYNTAX_ERROR.value, 'ESPERAVA: ' +
+                                expected_str + ' MAS RECEBEU: ' + token.get_attribute(), pos)
             print('SyntaxError: expected \'' + expected_str + '\', but received \'' +
-                    token.get_attribute() + '\' on line ' + str(pos[0] + 1))
-            
+                  token.get_attribute() + '\' on line ' + str(pos[0] + 1))
+
             self.parser_tokens.append(token_error)
             while(True):
                 if (token != None):
@@ -951,11 +976,16 @@ class Parser():
                   expected + '\', but there are no more tokens.')
             return
 
-
     def get_token(self):
         pos = self.cursor.get_position()
         if (pos < len(self.tokens)):
             return self.tokens[pos]
+        return None
+
+    def get_previous_token(self, n):
+        pos = self.cursor.get_position()
+        if (pos < len(self.tokens)):
+            return self.tokens[pos-n]
         return None
 
     def get_tokens_parser(self):

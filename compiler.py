@@ -2,6 +2,7 @@ from lexical_analyzer import LexicalAnalyzer
 from parser import Parser
 from symbol_table import SymbolTable
 from constants import reserved_words
+from semantic import Semantic
 
 
 class Compiler():
@@ -10,7 +11,8 @@ class Compiler():
         self.symbol_table = SymbolTable(reserved_words)
         self.lexical_analyzer = LexicalAnalyzer(self.code, self.symbol_table)
         tokens, errors = self.lexical_analyzer.get_tokens()
-        self.parser = Parser(tokens)
+        self.semantic = Semantic(self.symbol_table)
+        self.parser = Parser(tokens, self.semantic, self.symbol_table)
 
     """
     This method returns symbol table dict.
@@ -24,3 +26,6 @@ class Compiler():
 
     def get_tokens_parser(self):
         return self.parser.get_tokens_parser()
+
+    def get_tokens_semantic(self):
+        return self.semantic.get_tokens()

@@ -49,6 +49,8 @@ class Errors(Enum):
     MF_OPERATOR = 'OpMF'
     MF_STRING = 'CMF'
     SYNTAX_ERROR = 'ERRO SINTÁTICO'
+    SEMANTIC_ERROR = 'ERRO SEMÂNTICO'
+
 
 class Firsts(Enum):
     DECLS = ['function', 'procedure']
@@ -90,53 +92,71 @@ class Firsts(Enum):
 
 
 class Follows(Enum):
-    STRUCTS = ['const', 'var', 'procedure']    #ok
-    START_BLOCK = ['function', 'procedure']    #ok      
-    DECL = ['function', 'procedure']           #ok
-    STRUCT_BLOCK = ['struct', 'typedef', 'const', 'var', 'procedure'] #ok
-    EXTENDS = ['{'] #ok
-    CONST_BLOCK = ['var', 'procedure'] #ok
-    VAR_BLOCK = ['}', 'procedure', 'if', 'while', 'return', 'IDE', 'local', 'global', 'print', 'read' ] #ok
-    TYPE = ['IDE'] #ok
-    TYPEDEF = ['int', 'real', 'boolean', 'string', 'struct', 'IDE', 'typedef', '}'] #const decl e var decl
-    VAR_DECLS = ['}'] #ok
-    VAR_DECL = ['int', 'real', 'boolean', 'string', 'struct', 'IDE', 'typedef', '}'] #ok
-    VAR = [',', '=', ';'] #ok
-    VAR_LIST = ['int', 'real', 'boolean', 'string', 'struct', 'IDE', 'typedef', '}'] #ok
-    CONST_DECLS = ['}'] #ok
-    CONST_DECL = ['int', 'real', 'boolean', 'string', 'struct', 'IDE', 'typedef', '}'] #ok
-    CONST = [',', ';'] #ok
-    CONST_LIST = ['int', 'real', 'boolean', 'string', 'struct', 'IDE', 'typedef', '}'] #ok
-    DECL_ATRIBUTE = [',', '=', ';'] #ok
-    ARRAY_DECL = [',', '=', ';'] #ok
-    ARRAY_DEF = ['}'] #ok
-    ARRAY_EXPR = ['}'] #ok
-    ARRAY = ['[', '.', '=', '++', '--'] #ok
-    INDEX = [']'] #ok
-    ARRAYS =  ['=', ',', ';', '.', '>', '<', '>=', '<=', '==', '!=', '+', '-', '*', '/', '||', '&&'] #s(accessES
-    ASSIGN = ['if', 'while', 'print', 'read', 'global', 'local', 'IDE', 'return', '}']
+    STRUCTS = ['const', 'var', 'procedure']  # ok
+    START_BLOCK = ['function', 'procedure']  # ok
+    DECL = ['function', 'procedure']  # ok
+    STRUCT_BLOCK = ['struct', 'typedef', 'const', 'var', 'procedure']  # ok
+    EXTENDS = ['{']  # ok
+    CONST_BLOCK = ['var', 'procedure']  # ok
+    VAR_BLOCK = ['}', 'procedure', 'if', 'while', 'return',
+                 'IDE', 'local', 'global', 'print', 'read']  # ok
+    TYPE = ['IDE']  # ok
+    TYPEDEF = ['int', 'real', 'boolean', 'string', 'struct',
+               'IDE', 'typedef', '}']  # const decl e var decl
+    VAR_DECLS = ['}']  # ok
+    VAR_DECL = ['int', 'real', 'boolean', 'string',
+                'struct', 'IDE', 'typedef', '}']  # ok
+    VAR = [',', '=', ';']  # ok
+    VAR_LIST = ['int', 'real', 'boolean', 'string',
+                'struct', 'IDE', 'typedef', '}']  # ok
+    CONST_DECLS = ['}']  # ok
+    CONST_DECL = ['int', 'real', 'boolean', 'string',
+                  'struct', 'IDE', 'typedef', '}']  # ok
+    CONST = [',', ';']  # ok
+    CONST_LIST = ['int', 'real', 'boolean', 'string',
+                  'struct', 'IDE', 'typedef', '}']  # ok
+    DECL_ATRIBUTE = [',', '=', ';']  # ok
+    ARRAY_DECL = [',', '=', ';']  # ok
+    ARRAY_DEF = ['}']  # ok
+    ARRAY_EXPR = ['}']  # ok
+    ARRAY = ['[', '.', '=', '++', '--']  # ok
+    INDEX = [']']  # ok
+    ARRAYS = ['=', ',', ';', '.', '>', '<', '>=', '<=', '==',
+              '!=', '+', '-', '*', '/', '||', '&&']  # s(accessES
+    ASSIGN = ['if', 'while', 'print', 'read',
+              'global', 'local', 'IDE', 'return', '}']
     ACCESS = ['.', '=', '++', '--', ';']
-    ARGS = [')'] #ok
-    ARGS_LIST = [')'] #ok
-    FUNC_DECL = ['function', 'procedure'] #ok
-    PROC_DECL = ['function', 'procedure'] #ok
-    PARAM_TYPE = ['IDE'] #ok
-    PARAMS = [')'] #ok
-    PARAM = [',', ')'] #ok
-    PARAMS_LIST = [')'] #ok
-    PARAMS_ARRAYS = [',', ')'] #ok
-    PARAM_MULT_ARRAYS = [',', ')'] #ok
-    FUNC_BLOCK = ['function', 'procedure'] #ok
-    FUNC_STMS = ['}'] #ok
-    FUNC_STM = ['if', 'while', 'local', 'global', 'IDE', 'print', 'read', 'return'] #ok
-    ELSE_STM = ['if', 'while', 'local', 'global', 'IDE', 'print', 'read', 'return'] #ok
-    IF_STM = ['if', 'while', 'local', 'global', 'IDE', 'print', 'read', 'return'] #ok
-    WHILE_STM = ['if', 'while', 'local', 'global', 'IDE', 'print', 'read', 'return'] #ok
-    VAR_STM = ['if', 'while', 'local', 'global', 'IDE', 'print', 'read', 'return'] #ok
-    STM_ID = ['if', 'while', 'local', 'global', 'IDE', 'print', 'read', 'return'] #ok
-    STM_SCOPE = ['if', 'while', 'local', 'global', 'IDE', 'print', 'read', 'return'] #ok
-    STM_CMD = ['if', 'while', 'local', 'global', 'IDE', 'print', 'read', 'return'] #ok
-    EXPR = [',', '=', ';', '}', '[', ')'] #ok
-    ID_VALUE = ['*', '/', '+', '-', '>', '<', '<=', '>=', '==', '!=', '&&', '||', '}', ']', ')', ',', ';']
-    VALUE = ['*', '/', '+', '-', '>', '<', '<=', '>=', '==', '!=', '&&', '||', '}', ']', ')', ',', ';']
+    ARGS = [')']  # ok
+    ARGS_LIST = [')']  # ok
+    FUNC_DECL = ['function', 'procedure']  # ok
+    PROC_DECL = ['function', 'procedure']  # ok
+    PARAM_TYPE = ['IDE']  # ok
+    PARAMS = [')']  # ok
+    PARAM = [',', ')']  # ok
+    PARAMS_LIST = [')']  # ok
+    PARAMS_ARRAYS = [',', ')']  # ok
+    PARAM_MULT_ARRAYS = [',', ')']  # ok
+    FUNC_BLOCK = ['function', 'procedure']  # ok
+    FUNC_STMS = ['}']  # ok
+    FUNC_STM = ['if', 'while', 'local', 'global',
+                'IDE', 'print', 'read', 'return']  # ok
+    ELSE_STM = ['if', 'while', 'local', 'global',
+                'IDE', 'print', 'read', 'return']  # ok
+    IF_STM = ['if', 'while', 'local', 'global',
+              'IDE', 'print', 'read', 'return']  # ok
+    WHILE_STM = ['if', 'while', 'local', 'global',
+                 'IDE', 'print', 'read', 'return']  # ok
+    VAR_STM = ['if', 'while', 'local', 'global',
+               'IDE', 'print', 'read', 'return']  # ok
+    STM_ID = ['if', 'while', 'local', 'global',
+              'IDE', 'print', 'read', 'return']  # ok
+    STM_SCOPE = ['if', 'while', 'local', 'global',
+                 'IDE', 'print', 'read', 'return']  # ok
+    STM_CMD = ['if', 'while', 'local', 'global',
+               'IDE', 'print', 'read', 'return']  # ok
+    EXPR = [',', '=', ';', '}', '[', ')']  # ok
+    ID_VALUE = ['*', '/', '+', '-', '>', '<', '<=', '>=',
+                '==', '!=', '&&', '||', '}', ']', ')', ',', ';']
+    VALUE = ['*', '/', '+', '-', '>', '<', '<=', '>=',
+             '==', '!=', '&&', '||', '}', ']', ')', ',', ';']
     LOG_VALUE = ['!=', '==', '&&', '||', '>', '<', '>=', '<=', ')']
