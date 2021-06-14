@@ -29,14 +29,14 @@ class Parser():
         if (self.consume('var')):  # <Var Block>
             self.var_block()
 
-        if (self.consume('procedure')):  # <Start Block>
+        if (self.check_firsts(Firsts.DECLS)):  # <Decls>
+            self.decls()
+
+        if (self.consume('start')):  # <Start Block>
             self.semantic.set_scope('start')
             self.start_block()
         else:
-            self.handle_errorf('procedure', Follows.START_BLOCK)
-
-        if (self.check_firsts(Firsts.DECLS)):  # <Decls>
-            self.decls()
+            self.handle_errorf('start', Follows.START_BLOCK)
 
     # <Structs>
     def structs(self):
@@ -115,7 +115,7 @@ class Parser():
                                         token_identifier)
                 self.const()
                 if (self.check_firsts(Firsts.CONST_LIST)):
-                    self.const_list()
+                    self.const_list(token_type)
                 else:
                     self.handle_errorf(Firsts.CONST_LIST, Follows.CONST_DECL)
             else:
@@ -124,9 +124,13 @@ class Parser():
             self.type_def()
         elif (self.consume(Tokens.IDENTIFIER)):
             if (self.consume(Tokens.IDENTIFIER)):
+                token_type = self.get_previous_token(2)
+                token_identifier = self.get_previous_token(1)
+                self.semantic.add_const(token_type,
+                                        token_identifier)
                 self.const()
                 if (self.check_firsts(Firsts.CONST_LIST)):
-                    self.const_list()
+                    self.const_list(token_type)
                 else:
                     self.handle_errorf(Firsts.CONST_LIST, Follows.CONST_DECL)
             else:
@@ -146,12 +150,15 @@ class Parser():
             self.handle_errorf('=', Follows.CONST)
 
     # <Const List>
-    def const_list(self):
+    def const_list(self, token_type):
         if (self.consume(',')):
             if (self.consume(Tokens.IDENTIFIER)):
+                token_identifier = self.get_previous_token(1)
+                self.semantic.add_const(token_type,
+                                        token_identifier)
                 self.const()
                 if (self.check_firsts(Firsts.CONST_LIST)):
-                    self.const_list()
+                    self.const_list(token_type)
                 else:
                     self.handle_errorf(Firsts.CONST_LIST, Follows.CONST_LIST)
             else:
@@ -187,7 +194,7 @@ class Parser():
                                       token_identifier)
                 self.var()
                 if (self.check_firsts(Firsts.VAR_LIST)):
-                    self.var_list()
+                    self.var_list(token_type)
                 else:
                     self.handle_errorf(Firsts.VAR_LIST, Follows.VAR_DECL)
             else:
@@ -202,7 +209,7 @@ class Parser():
                                       token_identifier)
                 self.var()
                 if (self.check_firsts(Firsts.VAR_LIST)):
-                    self.var_list()
+                    self.var_list(token_type)
                 else:
                     self.handle_errorf(Firsts.VAR_LIST, Follows.VAR_DECL)
             else:
@@ -234,12 +241,15 @@ class Parser():
             self.arrays()
 
     # <Var List>
-    def var_list(self):
+    def var_list(self, token_type):
         if (self.consume(',')):
             if (self.consume(Tokens.IDENTIFIER)):
+                token_identifier = self.get_previous_token(1)
+                self.semantic.add_var(token_type,
+                                      token_identifier)
                 self.var()
                 if (self.check_firsts(Firsts.VAR_LIST)):
-                    self.var_list()
+                    self.var_list(token_type)
                 else:
                     self.handle_errorf(Firsts.VAR_LIST, Follows.VAR_LIST)
             else:
@@ -248,7 +258,7 @@ class Parser():
             if (self.check_firsts(Firsts.DECL_ATRIBUTE)):
                 self.decl_atribute()
                 if (self.check_firsts(Firsts.VAR_LIST)):
-                    self.var_list()
+                    self.var_list(token_type)
                 else:
                     self.handle_errorf(Firsts.VAR_LIST, Follows.VAR_LIST)
             else:
@@ -287,6 +297,9 @@ class Parser():
     # <Access>
     def access(self):
         if(self.consume(Tokens.IDENTIFIER)):
+            token_access = self.get_previous_token(3)
+            token_id = self.get_previous_token(1)
+            self.semantic.check_identifier_access(token_id, token_access)
             if (self.consume('[')):
                 self.arrays()
         else:
@@ -324,10 +337,10 @@ class Parser():
 
     # <Start Block>
     def start_block(self):
-        if(self.consume('start')):
+        if(self.consume('procedure')):
             self.func_block()
         else:
-            self.handle_errorf('start', Follows.START_BLOCK)
+            self.handle_errorf('procedure', Follows.START_BLOCK)
 
     # <Decls>
     def decls(self):
@@ -374,15 +387,18 @@ class Parser():
 
     # <Func decls>
     def func_decl(self):
+        token_id = None
+        params = None
         if (self.check_firsts(Firsts.PARAM_TYPE)):
             self.param_type()
             if (self.consume(Tokens.IDENTIFIER)):
                 token_id = self.get_previous_token(1)
-                self.semantic.set_scope(token_id.get_attribute())
                 if(self.consume('(')):
                     if (self.check_firsts(Firsts.PARAM_TYPE)):
                         self.params()
+                        params = self.get_params()
                     if(self.consume(')')):
+                        self.semantic.add_func(token_id, params)
                         self.func_block()
                     else:
                         self.handle_errorf(')', Follows.FUNC_DECL)
@@ -395,13 +411,16 @@ class Parser():
 
     # <Proc Decl>
     def proc_decl(self):
+        token_id = None
+        params = None
         if (self.consume(Tokens.IDENTIFIER)):
             token_id = self.get_previous_token(1)
-            self.semantic.set_scope(token_id.get_attribute())
             if(self.consume('(')):
                 if (self.check_firsts(Firsts.PARAM_TYPE)):
                     self.params()
+                    params = self.get_params()
                 if(self.consume(')')):
+                    self.semantic.add_proc(token_id, params)
                     self.func_block()
                 else:
                     self.handle_errorf(')', Follows.PROC_DECL)
@@ -410,7 +429,20 @@ class Parser():
         else:
             self.handle_errorf(Tokens.IDENTIFIER, Follows.PROC_DECL)
 
+    def get_params(self):
+        params = []
+        n = 1
+        while(self.get_previous_token(n).get_attribute() != '('):
+            token_id = self.get_previous_token(n)
+            if (token_id.get_name() == Tokens.IDENTIFIER.value):
+                token_type = self.get_previous_token(n + 1)
+                params.append((token_type, token_id))
+            n += 1
+        params.reverse()
+        return params
+
     # <Params>
+
     def params(self):
         self.param()
         if (self.consume(',')):
@@ -551,6 +583,8 @@ class Parser():
         if(self.check_firsts(Firsts.STM_SCOPE)):
             self.stm_scope()
         elif(self.consume(Tokens.IDENTIFIER)):
+            token_id = self.get_previous_token(1)
+            self.semantic.check_identifier(token_id)
             if(self.check_firsts(Firsts.STM_ID)):
                 self.stm_id()
             else:
@@ -764,6 +798,8 @@ class Parser():
             if(self.consume('.')):
                 self.accesses()
         elif(self.consume(Tokens.IDENTIFIER)):
+            token_id = self.get_previous_token(1)
+            self.semantic.check_identifier(token_id)
             if(self.check_firsts(Firsts.ID_VALUE)):
                 self.id_value()
         elif(self.consume('(')):
@@ -880,6 +916,8 @@ class Parser():
             if(self.consume('.')):
                 self.accesses()
         elif(self.consume(Tokens.IDENTIFIER)):
+            token_id = self.get_previous_token(1)
+            self.semantic.check_identifier(token_id)
             if(self.check_firsts(Firsts.ID_VALUE)):
                 self.id_value()
         elif(self.consume('(')):
