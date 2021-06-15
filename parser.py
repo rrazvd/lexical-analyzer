@@ -20,6 +20,7 @@ class Parser():
 
     # <Program>
     def program(self):
+        self.semantic.set_scope('global')
         if (self.check_firsts(Firsts.STRUCT_BLOCK)):  # <Structs>
             self.structs()
         self.semantic.set_scope('global')
@@ -49,7 +50,7 @@ class Parser():
         if(self.consume('struct')):
             if (self.consume(Tokens.IDENTIFIER)):
                 token_id = self.get_previous_token(1)
-                self.semantic.set_scope(token_id.get_attribute())
+                self.semantic.add_struct(token_id)
                 if(self.consume('extends')):
                     self.extends()
                 if (self.consume('{')):
@@ -62,14 +63,21 @@ class Parser():
             else:
                 self.handle_errorf(Tokens.IDENTIFIER, Follows.STRUCT_BLOCK)
         elif(self.consume('typedef')):
+            extends_id = None
             if(self.consume('struct')):
                 if(self.consume('extends')):
                     self.extends()
+                    extends_id = self.get_previous_token(1)
+                    self.semantic.check_identifier(extends_id)
                 if (self.consume('{')):
                     if(self.consume('var')):
+                        self.semantic.set_scope('@temporary_scope')
                         self.var_block()
                     if(self.consume('}')):
                         if (self.consume(Tokens.IDENTIFIER)):
+                            token_id = self.get_previous_token(1)
+                            self.semantic.add_typedef_struct(
+                                token_id, extends_id)
                             if (not self.consume(';')):
                                 self.handle_errorf(';', Follows.STRUCT_BLOCK)
                         else:
@@ -442,7 +450,6 @@ class Parser():
         return params
 
     # <Params>
-
     def params(self):
         self.param()
         if (self.consume(',')):
