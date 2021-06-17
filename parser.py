@@ -283,6 +283,8 @@ class Parser():
     # <Assign>
     def assign(self):
         if (self.consume('=')):
+            token_identifier_assigned = self.get_previous_token(2)
+            self.semantic.check_assigned(token_identifier_assigned)
             if(self.check_firsts(Firsts.EXPR)):
                 self.expr()
                 if(not self.consume(';')):
@@ -333,6 +335,8 @@ class Parser():
     def array(self):
         if (self.check_firsts(Firsts.INDEX)):
             self.index()
+            token_index = self.get_previous_token(1)
+            self.semantic.check_index(token_index)
         if (not self.consume(']')):
             self.handle_errorf(']', Follows.ARRAY)
 
@@ -399,6 +403,7 @@ class Parser():
         params = None
         if (self.check_firsts(Firsts.PARAM_TYPE)):
             self.param_type()
+            token_return = self.get_previous_token(1)
             if (self.consume(Tokens.IDENTIFIER)):
                 token_id = self.get_previous_token(1)
                 if(self.consume('(')):
@@ -406,8 +411,10 @@ class Parser():
                         self.params()
                         params = self.get_params()
                     if(self.consume(')')):
-                        self.semantic.add_func(token_id, params)
+                        self.semantic.add_func(token_return, token_id, params)
                         self.func_block()
+                        last_token = self.get_previous_token(1)
+                        self.semantic.verify_func_return(last_token)
                     else:
                         self.handle_errorf(')', Follows.FUNC_DECL)
                 else:
@@ -444,7 +451,8 @@ class Parser():
             token_id = self.get_previous_token(n)
             if (token_id.get_name() == Tokens.IDENTIFIER.value):
                 token_type = self.get_previous_token(n + 1)
-                params.append((token_type, token_id))
+                if (token_type.get_name() == 'IDE' or token_type.get_name() == 'PRE'):
+                    params.append((token_type, token_id))
             n += 1
         params.reverse()
         return params
@@ -478,6 +486,8 @@ class Parser():
         if (self.check_firsts(Firsts.TYPE)):
             self._type()
         elif (self.consume(Tokens.IDENTIFIER)):
+            token_id = self.get_previous_token(1)
+            self.semantic.check_identifier(token_id)
             pass
 
     # <Param Arrays>
@@ -526,6 +536,8 @@ class Parser():
         elif(self.check_firsts(Firsts.VAR_STM)):
             self.var_stm()
         elif(self.consume('return')):
+            token_return = self.get_previous_token(1)
+            self.semantic.check_return(token_return)
             if (self.check_firsts(Firsts.EXPR)):
                 self.expr()
                 if (not self.consume(';')):
@@ -534,6 +546,7 @@ class Parser():
                 self.handle_errorf(Firsts.EXPR, Follows.FUNC_STM)
 
     # <Else Stm>
+
     def else_stm(self):
         if(self.consume('{')):
             if (self.check_firsts(Firsts.FUNC_STMS)):

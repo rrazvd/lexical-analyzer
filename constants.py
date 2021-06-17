@@ -67,7 +67,7 @@ class Firsts(Enum):
     VAR_LIST = [',', '=', ';']
     CONST_LIST = [',', ';']
     DECL_ATRIBUTE = ['{', '!', 'NRO', 'CAD',
-                     'true', 'false', 'IDE', 'local', 'global' '(']
+                     'true', 'false', 'IDE', 'local', 'global', '(']
     EXPR = ['!', '-', 'NRO', 'CAD', 'true',
             'false', 'IDE', 'local', 'global', '(']
     VALUE = ['-', 'NRO', 'CAD', 'true', 'false', 'IDE', 'local', 'global', '(']
